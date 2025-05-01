@@ -44,7 +44,7 @@ weight = 3
 
 [[menu.main]]
 name = "Об авторе"
-url = "/about"
+url = "/cv"
 weight = 4
 
 
