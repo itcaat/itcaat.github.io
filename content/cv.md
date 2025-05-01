@@ -11,14 +11,15 @@ aliases = ["about","contact"]
 
 ## ⚙️ Навыки
 
-- **Инфраструктура**: Kubernetes, Proxmox 
+- **Infrastructure**: Kubernetes, Proxmox 
+- **IaC**: Terraform, Ansible 
 - **CI/CD**: GitHub, Gitlab, TeamCity, ArgoCD
-- **Мониторинг**: Prometheus, VictoriaMetrics, Grafana, Zabbix  
+- **Monitoring**: Prometheus, VictoriaMetrics, Grafana, Zabbix  
 - **Cloud**: Yandex, Selectel, AWS 
-- **Сообщения и очереди**: Kafka, RabbitMQ
-- **Базы данных**: PostgreSQL, MySQL, MSSQL, ClickHouse, Redis, Kvrock
-- **Языки программирования**: Go (основной), Python, Bash  
-- **Безопасность**: HashiCorp Vault
+- **Queue**: Kafka, RabbitMQ
+- **Databases**: PostgreSQL, MySQL, MSSQL, ClickHouse, Redis, Kvrock
+- **Programming**: Go, Python, Bash  
+- **Security**: HashiCorp Vault
 
 ## 📧 Контакты
 
