@@ -1,6 +1,6 @@
 baseURL = "https://example.com"
 languageCode = "en-us"
-title = "Archie"
+title = "DevOps Brain"
 theme="archie"
 copyright = "© Athul"
 pygmentsstyle = "monokai"
