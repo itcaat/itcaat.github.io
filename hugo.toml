@@ -2,14 +2,15 @@ baseURL = "https://itcaat.github.io"
 languageCode = "en-us"
 title = "DevOps Brain"
 theme="archie"
-copyright = "© Athul"
+copyright = "© It Cat"
 pygmentsstyle = "monokai"
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 [params]
 	mode="auto"
 	useCDN=false
-	subtitle = "Minimal and Clean [blog theme for Hugo](https://github.com/athul/archie)"
+	subtitle = "Твердо и четко - [телега](https://t.me/devopsbrain)"
+
 
 [[params.social]]
 name = "GitHub"
@@ -21,27 +22,22 @@ name = "Twitter"
 icon = "twitter"
 url = "https://twitter.com/athulcajay/"
 
-[[params.social]]
-name = "GitLab"
-icon = "gitlab"
-url = "https://gitlab.com/athul/"
-
 [[menu.main]]
-name = "Home"
+name = "На главную"
 url = "/"
 weight = 1
 
 [[menu.main]]
-name = "All posts"
+name = "Посты"
 url = "/posts"
 weight = 2
 
 [[menu.main]]
-name = "About"
+name = "Резюме(CV)"
 url = "/about"
 weight = 3
 
 [[menu.main]]
-name = "Tags"
+name = "Теги"
 url = "/tags"
 weight = 4
