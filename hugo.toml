@@ -38,11 +38,13 @@ url = "/posts"
 weight = 2
 
 [[menu.main]]
-name = "Об авторе"
-url = "/about"
+name = "Теги"
+url = "/tags"
 weight = 3
 
 [[menu.main]]
-name = "Теги"
-url = "/tags"
+name = "Об авторе"
+url = "/about"
 weight = 4
+
+
