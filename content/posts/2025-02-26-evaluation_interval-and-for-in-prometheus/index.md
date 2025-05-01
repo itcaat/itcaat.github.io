@@ -2,7 +2,7 @@
 title: "На что влияет evaluation_interval и for в алертах prometheus"
 date: 2025-05-01T13:39:35+03:00
 description: "Если вы используете prometheus или victoria metrics для настройки алертов, то наверняка встречали функции анализа временных рядов. Их отличительной особенностью является то, что они на вход получают временной интервал ([X]). "
-tags: [Procrastinating]
+tags: [theory]
 ---
 
 Если вы используете prometheus или victoria metrics для настройки алертов, то наверняка встречали функции анализа временных рядов. Их отличительной особенностью является то, что они на вход получают временной интервал ([X]). 
@@ -42,7 +42,8 @@ increase(orders_total{environment="production", status="success"}[30m])
       severity: critical
     annotations:
       summary: "No Success Orders"
-      description: "Successful orders dropped below 100 in the last 30 minutes"```
+      description: "Successful orders dropped below 100 in the last 30 minutes"
+```
 
 Разбор примера:
 - Как мы говорили выше —  функция increase(...[30m]) вычисляет изменение метрики за последние 30 минут.
