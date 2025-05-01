@@ -1,28 +1,50 @@
 +++
-title = "About"
+title = "Об авторе"
 description = "Hugo, the world’s fastest framework for building websites"
 date = "2019-02-28"
-aliases = ["about-us","about-hugo","contact"]
+aliases = ["contact"]
 author = "Hugo Authors"
 +++
 
-Written in Go, Hugo is an open source static site generator available under the [Apache Licence 2.0.](https://github.com/gohugoio/hugo/blob/master/LICENSE) Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.
-
-Hugo makes use of a variety of open source projects including:
-
-* https://github.com/yuin/goldmark
-* https://github.com/alecthomas/chroma
-* https://github.com/muesli/smartcrop
-* https://github.com/spf13/cobra
-* https://github.com/spf13/viper
-
-Hugo is ideal for blogs, corporate websites, creative portfolios, online magazines, single page applications or even a website with thousands of pages.
-
-Hugo is for people who want to hand code their own website without worrying about setting up complicated runtimes, dependencies and databases.
-
-Websites built with Hugo are extremelly fast, secure and can be deployed anywhere including, AWS, GitHub Pages, Heroku, Netlify and any other hosting provider.
-
-Learn more and contribute on [GitHub](https://github.com/gohugoio).
-
-
+```json
+{
+  "email": "worldisfreedom@gmail.com",
+  "position": "Senior DevOps / SRE / Infrastructure Engineer",
+  "summary": "Инженер с более чем 15-летним опытом в DevOps и SRE. Специализируюсь на построении отказоустойчивых инфраструктур, автоматизации CI/CD, сопровождении кластеров Kubernetes и систем мониторинга. Глубоко понимаю работу с облаками, базами данных и инструментами автоматизации.",
+  "skills": {
+    "Infrastructure": ["Kubernetes", "Proxmox"],
+    "IAC": ["Terraform", "Ansible"],
+    "CI/CD": ["GitHub", "TeamCity", "GitLab", "ArgoCD"],
+    "Monitoring": ["Prometheus", "VictoriaMetrics", "Grafana", "Alertmanager", "Zabbix"],
+    "Cloud": ["Selectel", "Yandex", "Aws"],
+    "Messaging": ["Kafka", "RabbitMQ", "Kvrocks"],
+    "Databases": ["PostgreSQL", "MySQL", "MSSQL", "ClickHouse", "Redis"],
+    "Programming": ["Go", "Python", "Bash"]
+  },
+  "experience": [
+    {
+      "company": "Go Travel Un Ltd",
+      "position": "Senior DevOps / SRE Engineer",
+      "period": "2020 — настоящее время",
+      "responsibilities": [
+        "Тут там",
+        "Туда сюда",
+        "Там сям",
+        "То тут то там"
+      ]
+    },
+    {
+      "company": "Уже не важно",
+      "position": "Senior DevOps / SRE Engineer",
+      "period": "20",
+      "responsibilities": [
+        "Тут там",
+        "Туда сюда",
+        "Там сям",
+        "То тут то там"
+      ]
+    }
+  ]
+}
+```
 

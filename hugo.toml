@@ -33,7 +33,7 @@ url = "/posts"
 weight = 2
 
 [[menu.main]]
-name = "Резюме(CV)"
+name = "Об авторе"
 url = "/about"
 weight = 3
 
