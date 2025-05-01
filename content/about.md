@@ -10,7 +10,7 @@ date: 2020-04-12
   "summary": "Инженер с более чем 15-летним опытом в DevOps и SRE. Специализируюсь на построении отказоустойчивых инфраструктур, автоматизации CI/CD, сопровождении кластеров Kubernetes и систем мониторинга. Глубоко понимаю работу с облаками, базами данных и инструментами автоматизации.",
   "skills": {
     "Infrastructure": ["Kubernetes", "Proxmox"],
-    "IAC": ["Terraform", "Ansible"],
+    "IAC": ["Terraform", "Ansible", "Helm"],
     "CI/CD": ["GitHub", "TeamCity", "GitLab", "ArgoCD"],
     "Monitoring": ["Prometheus", "VictoriaMetrics", "Grafana", "Alertmanager", "Zabbix"],
     "Cloud": ["Selectel", "Yandex", "Aws"],
