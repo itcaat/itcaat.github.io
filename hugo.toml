@@ -28,17 +28,12 @@ icon = "telegram"
 url = "https://t.me/devopsbrain"
 
 [[menu.main]]
-name = "На главную"
-url = "/"
-weight = 1
-
-[[menu.main]]
-name = "Все публикации"
+name = "Список публикаций"
 url = "/posts"
 weight = 2
 
 [[menu.main]]
-name = "Теги"
+name = "Категории"
 url = "/tags"
 weight = 3
 
