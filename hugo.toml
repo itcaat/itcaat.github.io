@@ -15,12 +15,17 @@ pygmentscodefencesguesssyntax = true
 [[params.social]]
 name = "GitHub"
 icon = "github"
-url = "https://github.com/athul/archie"
+url = "https://github.com/itcaat"
 
 [[params.social]]
 name = "Twitter"
 icon = "twitter"
-url = "https://twitter.com/athulcajay/"
+url = "https://x.com/itcaat"
+
+[[params.social]]
+name = "Telegram"
+icon = "telegram"
+url = "https://t.me/devopsbrain"
 
 [[menu.main]]
 name = "На главную"
@@ -28,7 +33,7 @@ url = "/"
 weight = 1
 
 [[menu.main]]
-name = "Посты"
+name = "Все публикации"
 url = "/posts"
 weight = 2
 
