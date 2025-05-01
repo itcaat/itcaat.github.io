@@ -3,45 +3,24 @@ title: Об авторе
 date: 2020-04-12
 ---
 
-```json
-{
-  "email": "worldisfreedom@gmail.com",
-  "position": "Senior DevOps / SRE / Infrastructure Engineer",
-  "summary": "Инженер с более чем 15-летним опытом в DevOps и SRE. Специализируюсь на построении отказоустойчивых инфраструктур, автоматизации CI/CD, сопровождении кластеров Kubernetes и систем мониторинга. Глубоко понимаю работу с облаками, базами данных и инструментами автоматизации.",
-  "skills": {
-    "Infrastructure": ["Kubernetes", "Proxmox"],
-    "IAC": ["Terraform", "Ansible", "Helm"],
-    "CI/CD": ["GitHub", "TeamCity", "GitLab", "ArgoCD"],
-    "Monitoring": ["Prometheus", "VictoriaMetrics", "Grafana", "Alertmanager", "Zabbix"],
-    "Cloud": ["Selectel", "Yandex", "Aws"],
-    "Messaging": ["Kafka", "RabbitMQ", "Kvrocks"],
-    "Databases": ["PostgreSQL", "MySQL", "MSSQL", "ClickHouse", "Redis"],
-    "Programming": ["Go", "Python", "Bash"]
-  },
-  "experience": [
-    {
-      "company": "Go Travel Un Ltd",
-      "position": "Senior DevOps / SRE Engineer",
-      "period": "2020 — настоящее время",
-      "responsibilities": [
-        "Тут там",
-        "Туда сюда",
-        "Там сям",
-        "То тут то там"
-      ]
-    },
-    {
-      "company": "Уже не важно",
-      "position": "Senior DevOps / SRE Engineer",
-      "period": "20",
-      "responsibilities": [
-        "Тут там",
-        "Туда сюда",
-        "Там сям",
-        "То тут то там"
-      ]
-    }
-  ]
-}
-```
+## 🧭 Об авторе
 
+Инженер с более чем 15-летним опытом в DevOps и SRE. Специализируюсь на построении отказоустойчивых высоконагруженных инфраструктур, автоматизации CI/CD, сопровождении кластеров Kubernetes и систем мониторинга. 
+
+---
+
+## ⚙️ Навыки
+
+- **Инфраструктура**: Kubernetes, Proxmox 
+- **CI/CD**: GitHub, Gitlab, TeamCity, ArgoCD
+- **Мониторинг**: Prometheus, VictoriaMetrics, Grafana, Zabbix  
+- **Cloud**: Yandex, Selectel, AWS 
+- **Сообщения и очереди**: Kafka, RabbitMQ
+- **Базы данных**: PostgreSQL, MySQL, MSSQL, ClickHouse, Redis, Kvrock
+- **Языки программирования**: Go (основной), Python, Bash  
+- **Безопасность**: HashiCorp Vault
+
+## 📧 Контакты
+
+- 📧 worldisfreedom@gmail.com
+- 📪 https://t.me/itcaat
