@@ -1,4 +1,3 @@
-# .github/workflows/hugo.yml
 name: Deploy Hugo site to Pages
 
 on:
