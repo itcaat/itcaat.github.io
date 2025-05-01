@@ -1,10 +1,7 @@
-+++
-title = "Об авторе"
-description = "Hugo, the world’s fastest framework for building websites"
-date = "2019-02-28"
-aliases = ["contact"]
-author = "Hugo Authors"
-+++
+---
+title: Об авторе
+date: 2020-04-12
+---
 
 ```json
 {
