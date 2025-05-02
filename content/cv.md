@@ -17,11 +17,12 @@ aliases = ["about","contact"]
 - **Monitoring**: Prometheus, VictoriaMetrics, Grafana, Zabbix  
 - **Cloud**: Yandex, Selectel, AWS 
 - **Queue**: Kafka, RabbitMQ
-- **Databases**: PostgreSQL, MySQL, MSSQL, ClickHouse, Redis, Kvrock
+- **Databases**: PostgreSQL, MySQL, MSSQL, ClickHouse, Redis, Kvrocks
 - **Programming**: Go, Python, Bash  
 - **Security**: HashiCorp Vault
 
 ## 📧 Контакты
 
-- 📧 worldisfreedom@gmail.com
-- 📪 https://t.me/itcaat
+- Почта: worldisfreedom@gmail.com
+- Telegram: https://t.me/itcaat
+- Telegram-канал: https://t.me/devopsbrain
