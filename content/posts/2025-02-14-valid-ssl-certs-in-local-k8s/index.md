@@ -2,7 +2,7 @@
 title: "Настройка самоподписных валидных ssl-сертификатов в локальном k8s"
 date: 2025-02-14T13:39:35+03:00
 description: "В данном гайде мы настроим автоматический выпуск “валидных” сертификатов в локальном kubernetes кластере. В качестве примера запустим приложение grafana."
-tags: [kubernetes, security]
+tags: [kubernetes, security, devops]
 toc: true
 ---
 

@@ -2,7 +2,7 @@
 title: "Opensource свернул не туда?"
 date: 2024-11-08T13:39:35+03:00
 description: "Сначала Линукс Торвальдс выпилил код российских разработчиков из ядра. Теперь вот тут отклонили PR за русскость https://github.com/reactor/reactor-core/pull/3897#issuecomment-2460103961. А сегодня я орнул..."
-tags: [holywar]
+tags: [thoughts]
 ---
 
 Сначала Линукс Торвальдс выпилил код российских разработчиков из ядра. Теперь вот тут отклонили PR за русскость https://github.com/reactor/reactor-core/pull/3897#issuecomment-2460103961.
