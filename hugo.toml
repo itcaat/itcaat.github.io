@@ -38,8 +38,13 @@ url = "/tags"
 weight = 3
 
 [[menu.main]]
+name = "Пет-проекты"
+url = "/tags/pet-projects/"
+weight = 4
+
+[[menu.main]]
 name = "Об авторе"
 url = "/cv"
-weight = 4
+weight = 5
 
 

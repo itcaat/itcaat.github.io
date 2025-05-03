@@ -7,6 +7,8 @@ tags: [pet projects]
 
 Proxmox Service Discovery - это инструмент для автоматического обнаружения сервисов в кластере Proxmox, работающий на основе DNS. Приложение опрашивает API Proxmox для получения информации о виртуальных машинах и узлах кластера, а затем создает DNS-записи типа `A`, которые позволяют другим сервисам находить виртуальные машины по их именам или тегам.
 
+https://github.com/itcaat/proxmox-service-discovery
+
 ## Мотивация
 
 Изучение golang, работа с API Proxmox. Решить проблему отсутствия service discovery в Proxmox Cluster.
