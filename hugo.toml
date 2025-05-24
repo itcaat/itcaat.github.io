@@ -9,8 +9,7 @@ pygmentscodefencesguesssyntax = true
 [params]
 	mode="auto"
 	useCDN=false
-	subtitle = "Твердо и четко - [телега](https://t.me/devopsbrain)"
-
+	subtitle = "Авторские посты по DevOps/Sre в моем [TG-канале](https://t.me/devopsbrain)"
 
 [[params.social]]
 name = "GitHub"
