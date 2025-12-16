@@ -12,7 +12,7 @@ home = ["HTML", "RSS", "JSON"]
 [params]
 	mode="toggle"
 	useCDN=false
-	subtitle = ""
+	subtitle = "Просто о сложном - авторские посты с большим количеством практики по DevOPS и SRE..."
 	favicon = "/favicon.ico"
 	customCSS = ["css/projects.css", "css/search.css", "css/feed.css", "css/telegram-icon.css"]
 	customJS = [
