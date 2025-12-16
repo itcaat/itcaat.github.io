@@ -1,0 +1,171 @@
+{{- define "feathericon" -}}
+  {{- $featherURL := "https://unpkg.com/feather-icons@4.29.2/dist/feather-sprite.svg" -}}
+  {{ if not (.UseCDN | default false) -}}
+    {{- $featherURL = (resources.Get "svg/feather-sprite.svg" | fingerprint).RelPermalink -}}
+  {{- end -}}
+<svg class="feather">
+   <use href="{{ printf "%s#%s" $featherURL .Icon }}" />
+</svg>
+{{- end -}}
+
+<header>
+	<div class="main">
+		<a href="{{ absLangURL "/" }}">{{ .Site.Title }}</a>
+	</div>
+	<nav>
+		{{ range .Site.Menus.main }}
+		<a href="{{ .URL }}">{{ .Name }}</a>
+		{{ end }}
+		<button id="search-toggle" class="search-toggle" aria-label="Toggle search">
+			<svg class="feather" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+				<circle cx="11" cy="11" r="8"></circle>
+				<path d="m21 21-4.35-4.35"></path>
+			</svg>
+		</button>
+		{{ if eq .Site.Params.mode "toggle" -}}
+		| <span id="dark-mode-toggle" onclick="toggleTheme()">{{template "feathericon" (dict "UseCDN" .Site.Params.useCDN "Icon" "sun") }}</span>
+		<script src="{{ absURL "js/themetoggle.js" }}"></script>
+		{{ end }}
+	</nav>
+</header>
+
+<!-- Search Modal -->
+<div id="search-modal" class="search-modal">
+	<div class="search-modal-content">
+		<div class="search-modal-header">
+			<input type="text" id="search-input" placeholder="Поиск по постам..." autofocus>
+			<button id="search-close" class="search-close" aria-label="Close search">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
+		</div>
+		<div id="search-results" class="search-results">
+			<p class="search-info">Введите запрос для поиска...</p>
+		</div>
+	</div>
+</div>
+
+<!-- Search Script -->
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+<script>
+	let fuse;
+	let searchData = [];
+	const searchModal = document.getElementById('search-modal');
+	const searchToggle = document.getElementById('search-toggle');
+	const searchClose = document.getElementById('search-close');
+	const searchInput = document.getElementById('search-input');
+	const searchResults = document.getElementById('search-results');
+
+	// Load search data
+	fetch('/index.json')
+		.then(response => response.json())
+		.then(data => {
+			searchData = data;
+			const options = {
+				keys: [
+					{ name: 'title', weight: 3 },
+					{ name: 'description', weight: 2 },
+					{ name: 'content', weight: 1 },
+					{ name: 'tags', weight: 2 }
+				],
+				threshold: 0.4,
+				includeScore: true,
+				minMatchCharLength: 2,
+				ignoreLocation: true
+			};
+			fuse = new Fuse(searchData, options);
+		});
+
+	// Open search modal
+	searchToggle.addEventListener('click', () => {
+		searchModal.classList.add('active');
+		searchInput.focus();
+	});
+
+	// Close search modal
+	searchClose.addEventListener('click', () => {
+		searchModal.classList.remove('active');
+		searchInput.value = '';
+		searchResults.innerHTML = '<p class="search-info">Введите запрос для поиска...</p>';
+	});
+
+	// Close on Escape
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && searchModal.classList.contains('active')) {
+			searchModal.classList.remove('active');
+			searchInput.value = '';
+			searchResults.innerHTML = '<p class="search-info">Введите запрос для поиска...</p>';
+		}
+	});
+
+	// Close on backdrop click
+	searchModal.addEventListener('click', (e) => {
+		if (e.target === searchModal) {
+			searchModal.classList.remove('active');
+			searchInput.value = '';
+			searchResults.innerHTML = '<p class="search-info">Введите запрос для поиска...</p>';
+		}
+	});
+
+	// Search on input
+	searchInput.addEventListener('input', (e) => {
+		const query = e.target.value.trim();
+		
+		if (!query) {
+			searchResults.innerHTML = '<p class="search-info">Введите запрос для поиска...</p>';
+			return;
+		}
+
+		if (query.length < 2) {
+			searchResults.innerHTML = '<p class="search-info">Введите минимум 2 символа...</p>';
+			return;
+		}
+
+		const results = fuse.search(query);
+		
+		if (results.length === 0) {
+			searchResults.innerHTML = '<p class="search-info">Ничего не найдено.</p>';
+			return;
+		}
+
+		let html = `<div class="search-count">Найдено: ${results.length}</div>`;
+		
+		results.slice(0, 10).forEach(result => {
+			const item = result.item;
+			const date = new Date(item.date).toLocaleDateString('ru-RU', {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric'
+			});
+			
+			const tags = item.tags ? item.tags.slice(0, 3).map(tag => 
+				`<span class="search-tag">${tag}</span>`
+			).join('') : '';
+			
+			html += `
+				<a href="${item.permalink}" class="search-result-item">
+					<div class="search-result-title">${item.title}</div>
+					<div class="search-result-meta">
+						<span class="search-result-date">${date}</span>
+						${tags}
+					</div>
+					${item.description ? `<div class="search-result-desc">${item.description.substring(0, 150)}${item.description.length > 150 ? '...' : ''}</div>` : ''}
+				</a>
+			`;
+		});
+		
+		searchResults.innerHTML = html;
+	});
+
+	// Keyboard shortcut: Ctrl+K or Cmd+K
+	document.addEventListener('keydown', (e) => {
+		if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+			e.preventDefault();
+			searchModal.classList.add('active');
+			searchInput.focus();
+		}
+	});
+</script>
+
