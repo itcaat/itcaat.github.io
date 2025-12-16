@@ -1,0 +1,58 @@
+/* Telegram Icon in Header */
+.telegram-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    margin-left: 0.5rem;
+    color: #0088cc;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+    line-height: 1;
+    outline: none;
+}
+
+.telegram-icon:focus {
+    outline: none;
+}
+
+.telegram-icon svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+}
+
+.telegram-icon:hover {
+    color: #00a0e6;
+    transform: translateY(-1px);
+}
+
+.telegram-icon:active {
+    transform: translateY(0);
+}
+
+/* Light mode */
+body.light-theme .telegram-icon {
+    color: #0088cc;
+}
+
+body.light-theme .telegram-icon:hover {
+    color: #006699;
+}
+
+@media (prefers-color-scheme: light) {
+    body:not(.dark-theme) .telegram-icon {
+        color: #0088cc;
+    }
+    
+    body:not(.dark-theme) .telegram-icon:hover {
+        color: #006699;
+    }
+}
+
+

@@ -1,6 +1,6 @@
 baseURL = "https://devopsbrain.ru"
 languageCode = "en-us"
-title = "DevOps Brain"
+title = "DevOps Brain 🧠"
 theme="archie"
 copyright = "© It Cat"
 pygmentsstyle = "monokai"
@@ -12,9 +12,9 @@ home = ["HTML", "RSS", "JSON"]
 [params]
 	mode="toggle"
 	useCDN=false
-	subtitle = "Авторские посты по DevOps/Sre в моем [TG-канале](https://t.me/devopsbrain)"
+	subtitle = ""
 	favicon = "/favicon.ico"
-	customCSS = ["css/projects.css", "css/search.css", "css/feed.css"]
+	customCSS = ["css/projects.css", "css/search.css", "css/feed.css", "css/telegram-icon.css"]
 	customJS = [
 		"<script type=\"text/javascript\">(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=105851409', 'ym');ym(105851409, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:\"dataLayer\", accurateTrackBounce:true, trackLinks:true});</script><noscript><div><img src=\"https://mc.yandex.ru/watch/105851409\" style=\"position:absolute; left:-9999px;\" alt=\"\" /></div></noscript>"
 	]
