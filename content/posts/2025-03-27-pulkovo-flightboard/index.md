@@ -3,6 +3,7 @@ title: "Pulkovo Flightboard Minecraft Plugin"
 date: 2025-03-27T13:39:35+03:00
 description: "Дети увлеклись Minecraft, а мне было интересно попробовать написать плагин для Minecraft. Было решено сделать отображение табло перелетов. Источник данных - Аэропорт Пулково "
 tags: [pet projects]
+thumbnail: "images/image.png"
 ---
 
 ## Мотивация
