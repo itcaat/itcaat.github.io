@@ -1,0 +1,90 @@
+/* Social Icons in Header */
+.social-icon {
+    background: none !important;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    vertical-align: middle;
+    line-height: 1;
+    opacity: 0.8;
+}
+
+.social-icon:hover,
+.social-icon:focus {
+    transform: scale(1.15);
+    background: none !important;
+    outline: none !important;
+    opacity: 1;
+}
+
+.social-icon:active {
+    transform: scale(1);
+    background: none !important;
+    outline: none !important;
+}
+
+.social-icon .feather {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+/* GitHub Icon */
+.github-icon {
+    color: var(--text-color);
+}
+
+.github-icon:hover,
+.github-icon:focus {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+}
+
+/* X Icon (Twitter) */
+.x-icon {
+    color: var(--text-color);
+}
+
+.x-icon svg {
+    fill: currentColor;
+}
+
+.x-icon:hover,
+.x-icon:focus {
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4));
+}
+
+/* Telegram Icon */
+.telegram-icon {
+    color: #0088cc;
+    animation: telegram-breathe 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 2px rgba(0, 136, 204, 0.3));
+}
+
+.telegram-icon:hover,
+.telegram-icon:focus {
+    color: #00a8ff;
+    animation: none;
+    filter: drop-shadow(0 0 6px rgba(0, 168, 255, 0.6));
+}
+
+/* Анимация дыхания для Telegram */
+@keyframes telegram-breathe {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+        filter: drop-shadow(0 0 2px rgba(0, 136, 204, 0.3));
+    }
+    50% {
+        transform: scale(1.25);
+        opacity: 1;
+        filter: drop-shadow(0 0 5px rgba(0, 136, 204, 0.7));
+    }
+}
+
