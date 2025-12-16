@@ -13,11 +13,20 @@
 		<section class="list-item post-card">
 			<h2 class="title"><a href="{{ .RelPermalink }}">{{.Title}}</a></h2>
 			<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
-			<div class="post-card-content">
-				{{ partial "post-thumbnail.html" . }}
-				<div class="post-card-text">
-					{{ template "partials/pagedescription.html" . }}
-					<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+			<div class="post-card-body">
+				<div class="post-card-content">
+					{{ if or .Params.thumbnail .Params.cover .Params.image }}
+					<div class="post-card-left">
+						{{ partial "post-thumbnail.html" . }}
+						<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+					</div>
+					{{ end }}
+					<div class="post-card-text">
+						{{ template "partials/pagedescription.html" . }}
+						{{ if not (or .Params.thumbnail .Params.cover .Params.image) }}
+						<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+						{{ end }}
+					</div>
 				</div>
 			</div>
 		</section>
