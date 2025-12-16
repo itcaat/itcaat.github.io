@@ -12,7 +12,7 @@ home = ["HTML", "RSS", "JSON"]
 [params]
 	mode="toggle"
 	useCDN=false
-	subtitle = "Просто о сложном - авторские посты с большим количеством практики по DevOPS и SRE..."
+	subtitle = "Просто о сложном - авторские материалы по DevOPS, SRE, администрированию и сетям"
 	favicon = "/favicon.ico"
 	customCSS = ["css/projects.css", "css/search.css", "css/feed.css", "css/social-icons.css"]
 	customJS = [
