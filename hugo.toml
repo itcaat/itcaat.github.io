@@ -36,7 +36,7 @@ url = "https://t.me/devopsbrain"
 
 [[menu.main]]
 name = "Блог"
-url = "/posts"
+url = "/"
 weight = 2
 
 [[menu.main]]

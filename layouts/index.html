@@ -19,18 +19,16 @@
 					<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
 					<div class="post-card-body">
 						<div class="post-card-content">
-							{{ if or .Params.thumbnail .Params.cover .Params.image }}
-							<div class="post-card-left">
-								{{ partial "post-thumbnail.html" . }}
-								<a class="readmore" href="{{ .RelPermalink }}">Читать далее ⟶</a>
-							</div>
-							{{ end }}
-							<div class="post-card-text">
-								{{ template "partials/pagedescription.html" . }}
-								{{ if not (or .Params.thumbnail .Params.cover .Params.image) }}
-								<a class="readmore" href="{{ .RelPermalink }}">Читать далее ⟶</a>
-								{{ end }}
-							</div>
+					{{ if or .Params.thumbnail .Params.cover .Params.image }}
+					<div class="post-card-left">
+						{{ partial "post-thumbnail.html" . }}
+						<a class="readmore readmore-desktop" href="{{ .RelPermalink }}">Читать далее ⟶</a>
+					</div>
+					{{ end }}
+					<div class="post-card-text">
+						{{ template "partials/pagedescription.html" . }}
+						<a class="readmore {{ if or .Params.thumbnail .Params.cover .Params.image }}readmore-mobile{{ end }}" href="{{ .RelPermalink }}">Читать далее ⟶</a>
+					</div>
 						</div>
 					</div>
 				</section>
