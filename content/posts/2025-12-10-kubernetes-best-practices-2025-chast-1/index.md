@@ -337,11 +337,12 @@ spec:
 
 **Если не делать:** Ловите трафик в неготовые Pod’ы, вечные рестарты, долгие деплои и инциденты "у нас всё поднялось, но не работает".
 
-Проверки работоспособности критичны для надёжности в продакшене:
+Пробы критичны для надёжности в продакшене:
 
-**Liveness Probe:** Перезапускает зависшие контейнеры 
-**Readiness Probe:** Удаляет pod'ы из service endpoints до готовности 
-**Startup Probe:** Обрабатывает медленно стартующие контейнеры
+**Startup Probe:** Нужно для медленно стартующих контейнеров. Kubernetes начинает проверять startupProbe. После чего включается в работу Liveness Probe и Readiness Probe.
+**Liveness Probe:** Перезапускает зависшие контейнеры после failureThreshold подряд неудач
+**Readiness Probe:** Чтобы сказать "контейнер запущен, но пока не готов принимать трафик". Когда readinessProbe успешна - Pod добавляется в он добавляется в Service / Endpoints / LoadBalancer.
+
 
 ```yaml
 containers:
@@ -398,9 +399,9 @@ spec:
 
 ### 14. Используйте Pod Disruption Budgets (PDB)
 
-**Почему важно:** PDB защищает от одновременного выноса всех реплик при дренажах/апгрейдах.
+**Почему важно:** PDB защищает от одновременного выноса всех реплик при дренажах/апгрейдах. Он как бы говорит Kubernetes: "во время плановых операций должно оставаться минимум N рабочих Pod’ов". PDB учитывается при: kubectl drain, node maintenance, cluster autoscaler (scale down), ручном удалении Pod’ов, rolling update Deployment’ов
 
-**Если не делать:** Во время maintenance можно случайно "выключить" сервис целиком, даже если реплик много.
+**Если не делать:** Во время обслуживания можно случайно "выключить" сервис целиком, даже если реплик много.
 
 PDB защищают ваше приложение во время плановых обслуживаний (дренаж нод, обновления кластера):
 
@@ -415,6 +416,7 @@ spec:
     matchLabels:
       app: api-server
 ```
+
 ### 15. Реализуйте Pod Anti-Affinity для высокой доступности
 
 **Почему важно:** Anti-affinity/распределение - это страховка от отказа одной ноды/зоны.
@@ -426,14 +428,18 @@ spec:
 ```yaml
 spec:
   affinity:
+    # Старайся не размещать поды рядом с другими подами с такими-то лейблами.
     podAntiAffinity:
+      # Это soft-правило. scheduler постарается выполнить его но может нарушить, если нет подходящих нод (в отличие от requiredDuringSchedulingIgnoredDuringExecution, которое жёсткое).
       preferredDuringSchedulingIgnoredDuringExecution:
+      # Стараться не размещать их на той же ноде потому что topologyKey: kubernetes.io/hostname. weight 100 - Scheduler очень сильно предпочитает разнести поды по разным нодам. Один api-server → одна нода (если возможно).
       - weight: 100
         podAffinityTerm:
           labelSelector:
             matchLabels:
               app: api-server
           topologyKey: kubernetes.io/hostname
+      # Это значит те же поды app=api-server Scheduler-у желательно распределить их по разным availability zone если кластер мультизональный.
       - weight: 50
         podAffinityTerm:
           labelSelector:
@@ -441,6 +447,8 @@ spec:
               app: api-server
           topologyKey: topology.kubernetes.io/zone
 ```
+
+По сути это подсказки планировщику Kubernetes, как лучше распределять поды , чтобы повысить отказоустойчивость. 
 
 ## Что дальше в серии
 
