@@ -73,18 +73,159 @@ kubernetes/
 
 Не повторяйтесь в разных окружениях. Используйте **Kustomize** (встроен в kubectl) или **Helm** для управления вариациями конфигурации для разных окружений.
 
-**Пример Kustomize:**
+**Пример структуры Kustomize:**
+
+```
+kubernetes/
+├── base/
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── configmap.yaml
+│   └── kustomization.yaml
+└── overlays/
+    ├── staging/
+    │   ├── kustomization.yaml
+    │   ├── replica-patch.yaml
+    │   └── configmap-patch.yaml
+    └── production/
+        ├── kustomization.yaml
+        ├── replica-patch.yaml
+        └── resource-limits.yaml
+```
+
+**Base конфигурация (base/deployment.yaml):**
 
 ```yaml
-# kustomization.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 2  # Базовое значение, переопределяется в overlays
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myregistry/myapp:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: CONFIG_PATH
+          value: /etc/config
+```
+
+**Base kustomization (base/kustomization.yaml):**
+
+```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - deployment.yaml
   - service.yaml
+  - configmap.yaml
+```
+
+**Staging overlay (overlays/staging/kustomization.yaml):**
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: staging
+namePrefix: staging-
+commonLabels:
+  environment: staging
+resources:
+  - ../../base
 patches:
   - path: replica-patch.yaml
+  - path: configmap-patch.yaml
+images:
+  - name: myregistry/myapp
+    newTag: v1.2.0-staging
 ```
+
+**Staging патч реплик (overlays/staging/replica-patch.yaml):**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 2
+```
+
+**Production overlay (overlays/production/kustomization.yaml):**
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: production
+namePrefix: prod-
+commonLabels:
+  environment: production
+resources:
+  - ../../base
+patches:
+  - path: replica-patch.yaml
+  - path: resource-limits.yaml
+images:
+  - name: myregistry/myapp
+    newTag: v1.2.0
+```
+
+**Production патч (overlays/production/replica-patch.yaml):**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  replicas: 5
+```
+
+**Production ресурсы (overlays/production/resource-limits.yaml):**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  template:
+    spec:
+      containers:
+      - name: myapp
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+```
+
+**Применение конфигурации:**
+
+```bash
+# Staging
+kubectl apply -k overlays/staging/
+
+# Production
+kubectl apply -k overlays/production/
+
+# Просмотр результата без применения
+kubectl kustomize overlays/production/
+```
+
+Такой подход даёт вам единую базу и чёткие различия между окружениями в overlay'ах.
 ### 4. Используйте Namespaces для логического разделения
 
 **Почему важно:** Namespaces дают изоляцию по ресурсам, доступам и политиками - это базовая гигиена multi-team кластера.
@@ -200,6 +341,13 @@ spec:
 Если ваши Deployment, Service и ConfigMap относятся к одному приложению, поместите их в один файл, разделив через `---`. 
 
 ```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-config
+data:
+  # ... данные конфигурации
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -214,12 +362,6 @@ metadata:
 spec:
   # ... спецификация service
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: myapp-config
-data:
-  # ... данные конфигурации
 ```
 
 **Преимущества:**
