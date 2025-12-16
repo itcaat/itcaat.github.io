@@ -1,3 +1,30 @@
+/* Theme Toggle Button */
+.theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+    transition: opacity 0.2s;
+    vertical-align: middle;
+    line-height: 1;
+}
+
+.theme-toggle:hover {
+    opacity: 0.7;
+}
+
+.theme-toggle .feather {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
 /* Search Toggle Button */
 .search-toggle {
     background: none;
@@ -193,66 +220,128 @@
     line-height: 1.5;
 }
 
-/* Light mode */
+/* Light mode via class */
+body.light-theme .search-modal {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+body.light-theme .search-modal-content {
+    background: #fff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+body.light-theme .search-modal-header {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme #search-input {
+    color: #000;
+}
+
+body.light-theme #search-input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+body.light-theme .search-close {
+    color: #000;
+}
+
+body.light-theme .search-info {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+body.light-theme .search-count {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+body.light-theme .search-result-item {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.05);
+}
+
+body.light-theme .search-result-item:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme .search-result-title {
+    color: #000;
+}
+
+body.light-theme .search-result-date {
+    color: rgba(0, 0, 0, 0.5);
+}
+
+body.light-theme .search-tag {
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(0, 0, 0, 0.7);
+}
+
+body.light-theme .search-result-desc {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Light mode via prefers-color-scheme (for browsers without JS) */
 @media (prefers-color-scheme: light) {
-    .search-modal {
+    body:not(.dark-theme) .search-modal {
         background-color: rgba(255, 255, 255, 0.9);
     }
     
-    .search-modal-content {
+    body:not(.dark-theme) .search-modal-content {
         background: #fff;
         border-color: rgba(0, 0, 0, 0.1);
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     }
     
-    .search-modal-header {
+    body:not(.dark-theme) .search-modal-header {
         border-bottom-color: rgba(0, 0, 0, 0.1);
     }
     
-    #search-input {
+    body:not(.dark-theme) #search-input {
         color: #000;
     }
     
-    #search-input::placeholder {
+    body:not(.dark-theme) #search-input::placeholder {
         color: rgba(0, 0, 0, 0.4);
     }
     
-    .search-close {
+    body:not(.dark-theme) .search-close {
         color: #000;
     }
     
-    .search-info {
+    body:not(.dark-theme) .search-info {
         color: rgba(0, 0, 0, 0.5);
     }
     
-    .search-count {
+    body:not(.dark-theme) .search-count {
         color: rgba(0, 0, 0, 0.5);
     }
     
-    .search-result-item {
+    body:not(.dark-theme) .search-result-item {
         background: rgba(0, 0, 0, 0.02);
         border-color: rgba(0, 0, 0, 0.05);
     }
     
-    .search-result-item:hover {
+    body:not(.dark-theme) .search-result-item:hover {
         background: rgba(0, 0, 0, 0.05);
         border-color: rgba(0, 0, 0, 0.1);
     }
     
-    .search-result-title {
+    body:not(.dark-theme) .search-result-title {
         color: #000;
     }
     
-    .search-result-date {
+    body:not(.dark-theme) .search-result-date {
         color: rgba(0, 0, 0, 0.5);
     }
     
-    .search-tag {
+    body:not(.dark-theme) .search-tag {
         background: rgba(0, 0, 0, 0.08);
         color: rgba(0, 0, 0, 0.7);
     }
     
-    .search-result-desc {
+    body:not(.dark-theme) .search-result-desc {
         color: rgba(0, 0, 0, 0.6);
     }
 }

@@ -10,7 +10,7 @@ pygmentscodefencesguesssyntax = true
 [outputs]
 home = ["HTML", "RSS", "JSON"]
 [params]
-	mode="auto"
+	mode="toggle"
 	useCDN=false
 	subtitle = "Авторские посты по DevOps/Sre в моем [TG-канале](https://t.me/devopsbrain)"
 	favicon = "/favicon.ico"
