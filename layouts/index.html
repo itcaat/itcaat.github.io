@@ -22,13 +22,13 @@
 							{{ if or .Params.thumbnail .Params.cover .Params.image }}
 							<div class="post-card-left">
 								{{ partial "post-thumbnail.html" . }}
-								<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+								<a class="readmore" href="{{ .RelPermalink }}">Читать далее ⟶</a>
 							</div>
 							{{ end }}
 							<div class="post-card-text">
 								{{ template "partials/pagedescription.html" . }}
 								{{ if not (or .Params.thumbnail .Params.cover .Params.image) }}
-								<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+								<a class="readmore" href="{{ .RelPermalink }}">Читать далее ⟶</a>
 								{{ end }}
 							</div>
 						</div>
