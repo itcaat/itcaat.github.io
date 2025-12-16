@@ -1,0 +1,31 @@
+{{- $raw := "" -}}
+{{- with .Params.thumbnail -}}{{- $raw = . -}}{{- end -}}
+{{- if not $raw -}}{{- with .Params.cover -}}{{- $raw = . -}}{{- end -}}{{- end -}}
+{{- if not $raw -}}{{- with .Params.image -}}{{- $raw = . -}}{{- end -}}{{- end -}}
+
+{{- if $raw -}}
+  {{- /* Remote URL */ -}}
+  {{- if or (hasPrefix $raw "http://") (hasPrefix $raw "https://") -}}
+    <a class="post-card-thumb" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+      <img src="{{ $raw }}" alt="{{ .Title }}" loading="lazy" decoding="async" />
+    </a>
+  {{- else -}}
+    {{- /* Page bundle resource (preferred) */ -}}
+    {{- $res := .Resources.GetMatch $raw -}}
+    {{- if not $res -}}
+      {{- $res = .Resources.GetMatch (printf "**/%s" $raw) -}}
+    {{- end -}}
+    {{- if $res -}}
+      <a class="post-card-thumb" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+        <img src="{{ $res.RelPermalink }}" alt="{{ .Title }}" loading="lazy" decoding="async" />
+      </a>
+    {{- else -}}
+      {{- /* Fallback: treat as site-relative path */ -}}
+      <a class="post-card-thumb" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">
+        <img src="{{ $raw | relURL }}" alt="{{ .Title }}" loading="lazy" decoding="async" />
+      </a>
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+

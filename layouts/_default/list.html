@@ -1,0 +1,40 @@
+{{ define "main" }}
+{{ if isset .Data "Term" }}
+<h1>Entries tagged - "{{ .Data.Term }}"</h1>
+{{ else }}
+<h1 class="page-title">All articles</h1>
+{{ end }}
+
+{{/* For the posts section, render a richer list with thumbnails + descriptions */}}
+{{ if eq .Section "posts" }}
+<div class="posts post-cards">
+	{{- range .Data.Pages -}}
+		{{- if (not (in (.Site.Params.excludedTypes | default (slice "page")) .Type)) -}}
+		<section class="list-item post-card">
+			<h2 class="title"><a href="{{ .RelPermalink }}">{{.Title}}</a></h2>
+			<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
+			<div class="post-card-content">
+				{{ partial "post-thumbnail.html" . }}
+				<div class="post-card-text">
+					{{ template "partials/pagedescription.html" . }}
+					<a class="readmore" href="{{ .RelPermalink }}">Read more ⟶</a>
+				</div>
+			</div>
+		</section>
+		{{- end -}}
+	{{- end -}}
+</div>
+{{ else }}
+<ul class="posts">
+	{{- range .Data.Pages -}}
+		{{- if (not (in (.Site.Params.excludedTypes | default (slice "page")) .Type)) -}}
+		<li class="post">
+			<a href="{{ .RelPermalink }}">{{.Title}}</a> <span class="meta">{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</span>
+		</li>
+		{{- end -}}
+	{{- end -}}
+</ul>
+{{ end }}
+{{ end }}
+
+
