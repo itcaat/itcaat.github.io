@@ -1,0 +1,36 @@
+projects:
+  - name: "TeamCity MCP Server"
+    description: "Go-сервер, который превращает ваш TeamCity в AI-френдли ресурс через протокол Model Context Protocol. Теперь ваш ChatGPT или Claude может тригерить билды, читать логи и даже троллить вас за красные тесты."
+    image: ""
+    github: "https://github.com/itcaat/teamcity-mcp"
+    website: ""
+    icon: "🤖"
+    
+  - name: "Terraform Kubernetes Desktop Startkit"
+    description: "Стартовый набор для быстрого развертывания локального Kubernetes кластера с Terraform. Включает настройку валидных SSL сертификатов и базовую инфраструктуру за пару команд."
+    image: ""
+    github: "https://github.com/itcaat/terraform-kubernetes-desktop-startkit"
+    website: ""
+    icon: "☸️"
+    
+  - name: "Pulkovo Flightboard"
+    description: "Плагин для Minecraft, который создаёт голограмму с актуальными рейсами из аэропорта Пулково. Данные загружаются через API и обновляются автоматически."
+    image: "/posts/2025-03-27-pulkovo-flightboard/images/image.png"
+    github: "https://github.com/itcaat/flightboard"
+    website: ""
+    icon: "✈️"
+    
+  - name: "TheVerbs"
+    description: "Прогрессивное веб-приложение (PWA) для изучения английских фразовых глаголов. Использует Blazor WebAssembly и предлагает интерактивный способ запоминать фразовые глаголы через систему карточек."
+    image: "/posts/2019-11-08-the-verbs-izuchaem-frazovie-glagoli/images/image.jpg"
+    github: ""
+    website: "https://play.google.com/store/apps/details?id=ru.voiplab.theverbs"
+    icon: "📚"
+    
+  - name: "AMI Launcher for Asterisk"
+    description: "Windows-приложение, которое выполняет внешние приложения или открывает веб-страницы в ответ на события звонков Asterisk PBX через AMI."
+    image: ""
+    github: "https://github.com/itcaat/AMI-Launcher"
+    website: ""
+    icon: "☎️"
+
