@@ -303,10 +303,10 @@ spec:
 
 Если в этой части мы разобрались с сетью, метками, конфигами и ресурсами — то дальше будет больше про production-hardening и эксплуатацию:
 
-- **Часть 3: Безопасность, наблюдаемость и образы** — запуск не от root, Network Policies, метрики/логи/трейсы, graceful shutdown, сканирование образов и управление registry.
+**Часть 3: Безопасность, наблюдаемость и образы** — запуск не от root, Network Policies, метрики/логи/трейсы, graceful shutdown, сканирование образов и управление registry.
 
-- **Часть 4: Масштабирование и хранилище** — HPA/VPA/KEDA для автомасштабирования, PersistentVolumes и StorageClasses, размещение по нодам/зонам (affinity/taints/spread), контейнерные паттерны (init/sidecar/ephemeral).
+**Часть 4: Масштабирование и хранилище** — HPA/VPA/KEDA для автомасштабирования, PersistentVolumes и StorageClasses, размещение по нодам/зонам (affinity/taints/spread), контейнерные паттерны (init/sidecar/ephemeral).
 
-- **Часть 5: GitOps и платформа** — ArgoCD/FluxCD для управления через Git, service mesh (когда он нужен и как правильно), ingress контроллеры и TLS, RBAC, kubectl плагины и техники отладки.
+**Часть 5: GitOps и платформа** — ArgoCD/FluxCD для управления через Git, service mesh (когда он нужен и как правильно), ingress контроллеры и TLS, RBAC, kubectl плагины и техники отладки.
 
-- **Часть 6: Финальные темы** — оптимизация стоимости, управление переменными окружения, lifecycle hooks, policy-as-code (OPA/Kyverno), backup/DR с Velero, продвинутые probes, troubleshooting типовых проблем и антипаттерны.
+**Часть 6: Финальные темы** — оптимизация стоимости, управление переменными окружения, lifecycle hooks, policy-as-code (OPA/Kyverno), backup/DR с Velero, продвинутые probes, troubleshooting типовых проблем и антипаттерны.

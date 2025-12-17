@@ -1,0 +1,12 @@
+/* Custom Content Width */
+.content {
+    max-width: 900px;
+}
+
+/* Для очень больших экранов можно ещё увеличить */
+@media (min-width: 1400px) {
+    .content {
+        max-width: 900px;
+    }
+}
+
