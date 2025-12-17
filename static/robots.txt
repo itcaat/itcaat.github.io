@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://devopsbrain.ru/sitemap.xml
+

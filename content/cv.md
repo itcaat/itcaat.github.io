@@ -1,6 +1,6 @@
 +++
 title = "Обо мне"
-description = "CV DevOps/SRE-инженер"
+description = "CV DevOps/SRE-инженера: опыт работы с Kubernetes, Terraform, мониторингом, CI/CD и облачными платформами. Контакты для связи."
 date = "2025-05-01"
 aliases = ["about","contact"]
 +++
