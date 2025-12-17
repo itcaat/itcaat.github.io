@@ -13,11 +13,25 @@
 				</div>
 				{{ $pages := where .Site.RegularPages "Type" "in" .Site.Params.mainSections }}
 				{{ $paginator := .Paginate (where $pages "Params.hidden" "ne" true) }}
-				{{ range $paginator.Pages }}
-				<section class="list-item post-card">
-					<h1 class="title"><a href="{{ .RelPermalink }}">{{.Title}}</a></h1>
+			{{ range $paginator.Pages }}
+			<section class="list-item post-card">
+				<h1 class="title"><a href="{{ .RelPermalink }}">{{.Title}}</a></h1>
+				<div class="post-meta">
 					<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
-					<div class="post-card-body">
+					{{ if .Params.tags }}
+					<span class="meta-separator">|</span>
+					<div class="post-tags">
+						<nav class="nav tags">
+							<ul class="tags">
+								{{ range .Params.tags }}
+								<li><a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">{{ . }}</a></li>
+								{{ end }}
+							</ul>
+						</nav>
+					</div>
+					{{ end }}
+				</div>
+				<div class="post-card-body">
 						<div class="post-card-content">
 					{{ if or .Params.thumbnail .Params.cover .Params.image }}
 					<div class="post-card-left">
@@ -31,7 +45,7 @@
 					</div>
 						</div>
 					</div>
-				</section>
+			</section>
 				{{ end }}
 				{{ template "partials/paginator.html" . }}
 			</main>

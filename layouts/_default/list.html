@@ -12,7 +12,21 @@
 		{{- if (not (in (.Site.Params.excludedTypes | default (slice "page")) .Type)) -}}
 		<section class="list-item post-card">
 			<h2 class="title"><a href="{{ .RelPermalink }}">{{.Title}}</a></h2>
-			<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
+			<div class="post-meta">
+				<time>{{ dateFormat ":date_medium" .Date }}{{ if .Draft }} <span class="draft-label">DRAFT</span> {{ end }}</time>
+				{{ if .Params.tags }}
+				<span class="meta-separator">|</span>
+				<div class="post-tags">
+					<nav class="nav tags">
+						<ul class="tags">
+							{{ range .Params.tags }}
+							<li><a href="{{ "/tags/" | relLangURL }}{{ . | urlize }}">{{ . }}</a></li>
+							{{ end }}
+						</ul>
+					</nav>
+				</div>
+				{{ end }}
+			</div>
 			<div class="post-card-body">
 				<div class="post-card-content">
 				{{ if or .Params.thumbnail .Params.cover .Params.image }}
