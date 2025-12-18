@@ -95,31 +95,63 @@
     background: radial-gradient(circle, rgba(0, 168, 255, 0.5) 0%, rgba(0, 168, 255, 0) 70%);
 }
 
-/* Анимация дыхания для Telegram */
+/* Анимация дыхания для Telegram - УСИЛЕННАЯ */
 @keyframes telegram-breathe {
     0%, 100% {
         transform: scale(1);
-        opacity: 0.6;
-        filter: drop-shadow(0 0 2px rgba(0, 136, 204, 0.3));
+        opacity: 0.7;
+        filter: drop-shadow(0 0 3px rgba(0, 136, 204, 0.4));
     }
     50% {
-        transform: scale(1.25);
+        transform: scale(1.4);
         opacity: 1;
-        filter: drop-shadow(0 0 5px rgba(0, 136, 204, 0.7));
+        filter: drop-shadow(0 0 10px rgba(0, 136, 204, 0.9));
     }
 }
 
-/* Анимация свечения круга */
+/* Анимация свечения круга - УСИЛЕННАЯ */
 @keyframes telegram-glow {
     0%, 100% {
         width: 30px;
         height: 30px;
-        opacity: 0.5;
+        opacity: 0.6;
     }
     50% {
-        width: 40px;
-        height: 40px;
-        opacity: 0.8;
+        width: 50px;
+        height: 50px;
+        opacity: 1;
     }
+}
+
+/* Footer Social Icons */
+.footer-social {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.footer-social a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    opacity: 0.7;
+    border-bottom: none !important;
+}
+
+.footer-social a:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.footer-social .feather {
+    width: 20px;
+    height: 20px;
+}
+
+.footer-social .telegram-icon {
+    animation: telegram-breathe 3s ease-in-out infinite;
 }
 
