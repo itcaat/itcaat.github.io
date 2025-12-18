@@ -46,3 +46,29 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Более тонкая полоска под ссылками (1.5px вместо 3px) с зелёным цветом - только для текстовых ссылок */
+a {
+  border-bottom: 1.5px solid #28a745 !important;
+}
+
+/* Убираем подчёркивание с нетекстовых элементов */
+a img,
+a:has(img),
+.header a,
+.nav a,
+.soc a,
+.social a,
+.logo a,
+header a,
+nav a {
+  border-bottom: none !important;
+}
+
+.callout a {
+  border-bottom: 1.5px solid #fff !important;
+}
+
+.tags a {
+  border-bottom: 1.5px solid #28a745 !important;
+}
+
