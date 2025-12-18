@@ -1,31 +1,22 @@
 ---
-title: "Лучшие практики конфигурирования Kubernetes в 2025 — Часть 3: Безопасность+наблюдаемость+graceful shutdown+образы"
-date: 2025-12-10T13:43:00+03:00
-description: "Серия заметок: лучшие практики Kubernetes в формате живой статьи. Эта часть — одна из глав; все примеры и команды сохранены."
+title: "Лучшие практики конфигурирования Kubernetes в 2025 - Часть 3: безопасность, логи, наблюдаемость и graceful shutdown"
+date: 2025-12-18T13:43:00+03:00
+description: "Эта часть про безопасность подов, сетевые политики, наблюдаемость (метрики/логи/трейсы), корректное завершение (SIGTERM, draining) и управление образами. Это набор лучших практик, который делает инциденты диагностируемыми и **переживаемыми - даже когда всё идёт не по плану."
 thumbnail: "images/image.png"
-tags: [sre, kubernetes]
-draft: true
+tags: [kubernetes]
 ---
 
-Есть два подхода к продакшену: “потом прикрутим безопасность/метрики/грейсфул” и “почему оно снова умерло без логов”. Обычно команды быстро мигрируют от первого ко второму — через боль, но мигрируют.
+Есть два подхода к продакшену: “потом прикрутим безопасность/метрики/грейсфул” и “почему оно снова умерло. Открываем логи и метрики и смотрим!”. Обычно команды быстро мигрируют от первого ко второму - через боль, но мигрируют.
 
-Часть 3 — про базовый production-hardening: запуск не от root, сетевые политики, наблюдаемость (метрики/логи/трейсы), корректное завершение (SIGTERM, draining) и управление образами. Это набор практик, который делает инциденты **диагностируемыми** и **переживаемыми** — даже когда всё идёт не по плану.
-
-**Серия:** Часть 3 из 6. (Ссылки на остальные части можно проставить после объединения.)
-
-### В этой части
-- [Безопасность (29–31)](#security)
-- [Наблюдаемость (32–34)](#observability)
-- [Graceful shutdown (35–37)](#graceful)
-- [Образы (38–41)](#images)
+Эта часть про безопасность подов, сетевые политики, наблюдаемость (метрики/логи/трейсы), корректное завершение (SIGTERM, draining) и управление образами. Это набор лучших практик, который делает инциденты **диагностируемыми** и **переживаемыми** - даже когда всё идёт не по плану.
 
 <a id="security"></a>
 
 ## Безопасность
 
-### 29. Запускайте контейнеры не от root
+### 29. Никогда не запускайте контейнеры от root
 
-**Почему важно:** root в контейнере — это лишние привилегии. В k8s это почти всегда неоправданный риск.
+**Почему важно:** root в контейнере - это лишние привилегии. В k8s это почти всегда неоправданный риск.
 
 **Если не делать:** Уязвимость в приложении даст более глубокий доступ; возрастёт шанс побега/компрометации ноды.
 
@@ -47,9 +38,9 @@ spec:
 ```
 ### 30. Используйте Network Policies
 
-**Почему важно:** NetworkPolicy — единственный нормальный способ сказать «кто с кем может говорить».
+NetworkPolicy - единственный нормальный способ сказать "кто с кем может говорить". 
 
-**Если не делать:** По умолчанию будет «всем всё можно», и любой компрометированный Pod станет трамплином по кластеру.
+**Если не делать:** По умолчанию будет "всем всё можно", и любой компрометированный Pod станет трамплином по кластеру.
 
 Ограничьте pod-to-pod коммуникацию:
 
@@ -57,7 +48,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: api-network-policy
+  name: api-network-policy-enhanced
+  namespace: production # Явное указание namespace - хорошая практика
 spec:
   podSelector:
     matchLabels:
@@ -65,28 +57,76 @@ spec:
   policyTypes:
   - Ingress
   - Egress
+
   ingress:
+  # 1. Разрешить трафик только от frontend в том же namespace
   - from:
     - podSelector:
         matchLabels:
           app: frontend
     ports:
     - port: 8080
+      protocol: TCP
+  # 2. Разрешить сбор метрик от Prometheus (опционально)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring # namespace с Prometheus
+      podSelector:
+        matchLabels:
+          app: prometheus
+    ports:
+    - port: 9090 # Порт метрик вашего приложения
+      protocol: TCP
+
   egress:
+  # 1. Обязательно: разрешить DNS-запросы
+  - to:
+    - namespaceSelector: {} # Разрешить доступ в любой namespace
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns # или k8s-app: coredns
+    ports:
+    - port: 53
+      protocol: UDP
+    - port: 53
+      protocol: TCP
+  # 2. Разрешить доступ к базе данных
   - to:
     - podSelector:
         matchLabels:
           app: database
     ports:
     - port: 5432
+      protocol: TCP
+  # 3. Разрешить исходящий трафик в публичный интернет (опционально, для внешних API)
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+        except:
+        - 10.0.0.0/8 # Исключить внутренние сети
+        - 172.16.0.0/12
+        - 192.168.0.0/16
+    ports:
+    - port: 443
+      protocol: TCP
+    - port: 80
+      protocol: TCP
 ```
+
+**Начинайте с простого:** Ваша исходная политика - отличная основа. Не пытайтесь сразу написать идеальную. Начните с неё, протестируйте работу приложения.
+
+**Обязательно добавьте DNS:** Без правила для порта 53 политика гарантированно сломает сетевое взаимодействие. Это самый частый источник ошибок.
+
+**Тестируйте в изоляции:** Применяйте политики поэтапно в non-production средах. Используйте kubectl describe networkpolicy и инструменты вроде kubectl run --rm -it testpod --image=nicolaka/netshoot для проверки связности (curl, dig, nc).
+
+**Логируйте отказанный трафик:** В некоторых CNI (например, Calico) можно настроить логирование дропнутых пакетов для отладки сложных политик.
+
+Важно упоминуть, что для их работы требуется установленный CNI-плагин, поддерживающий NetworkPolicy (Calico, Cilium, Weave Net). Без него манифесты будут бесполезны.
+
 ### 31. Используйте Pod Security Standards (PSS) вместо устаревших PSP
 
-**Почему важно:** PSA/PSS — современная замена PSP и база для baseline безопасности.
-
-**Если не делать:** Либо останетесь без enforcement, либо будете пытаться оживить устаревшее; в итоге риск и техдолг.
-
-**Важно:** PodSecurityPolicy (PSP) удалены в Kubernetes v1.25. Используйте современные альтернативы:
+PSA/PSS - современная замена PSP и база для baseline безопасности. PodSecurityPolicy (PSP) удалены в Kubernetes v1.25.
 
 **Pod Security Admission (PSA)** - встроенный механизм (рекомендуется):
 
@@ -96,95 +136,65 @@ kind: Namespace
 metadata:
   name: production
   labels:
-    # Применить политику (блокирует нарушения)
-    pod-security.kubernetes.io/enforce: restricted
-    pod-security.kubernetes.io/enforce-version: latest
-    
-    # Предупреждения (не блокирует)
-    pod-security.kubernetes.io/warn: restricted
-    pod-security.kubernetes.io/warn-version: latest
-    
-    # Аудит (логирует нарушения)
+    # 1. Аудит для restricted (логируем всё, что не соответствует)
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: latest
+    # 2. Предупреждения для baseline (видим базовые ошибки в kubectl)
+    pod-security.kubernetes.io/warn: baseline
+    pod-security.kubernetes.io/warn-version: latest
+    # 3. Пока не блокируем, или блокируем только privileged
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/enforce-version: latest
 ```
 
-**Уровни Pod Security Standards:**
+**Аудит (restricted):** В аудит-логи API-сервера попадут ВСЕ поды, которые не соответствуют самому высокому стандарту restricted. Это даёт полную картину.
 
-* `privileged` - без ограничений (не рекомендуется для production)
-* `baseline` - минимальные ограничения (запрещает привилегированные контейнеры)
-* `restricted` - строгие ограничения (рекомендуется для production)
+**Предупреждения (baseline):** Разработчики сразу увидят предупреждение в kubectl, если их под нарушает даже базовые требования.
 
-**Альтернативы для сложных политик:**
+**Блокировка (privileged):** Фактически не блокирует ничего, кроме совсем уж экзотических случаев. Это позволяет начать сбор данных, не ломая рабочие процессы. По мере готовности можно повысить уровень enforce до baseline, а затем и до restricted.
 
-* **Kyverno** - декларативные политики на YAML
-* **OPA Gatekeeper** - политики на языке Rego (более гибкие)
-
-Пример политики Kyverno:
-
-```yaml
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
-metadata:
-  name: require-non-root
-spec:
-  validationFailureAction: enforce
-  rules:
-  - name: check-runAsNonRoot
-    match:
-      resources:
-        kinds:
-        - Pod
-    validate:
-      message: "Контейнеры должны запускаться не от root"
-      pattern:
-        spec:
-          securityContext:
-            runAsNonRoot: true
-```
+Для более сложных политик можно использовать: *Kyverno* или *OPA Gatekeeper*.
 
 <a id="observability"></a>
 
 ## Наблюдаемость и мониторинг
 
-### 32. Настройте сбор метрик Prometheus
+### 32. Настройте сбор метрик Prometheus через Prometheus Operator.
 
-**Почему важно:** Метрики — это наблюдаемость и управление. Без них вы спорите с реальностью.
+Метрики - это наблюдаемость и управление. Без них вы спорите с реальностью. 
 
 **Если не делать:** Инциденты превратятся в гадание по логам; автоскейлинг/алерты будут неточными или невозможными.
 
-Включите автоматический сбор метрик с правильными аннотациями:
+Старый метод аннотаций prometheus.io/* считается устаревшей практикой по нескольким причинам: нарушение принципа разделения ответственности, сложность управления, ограниченная гибкость Современный метод - это Prometheus Operator и Custom Resources:
 
 ```yaml
-apiVersion: v1
-kind: Pod
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
 metadata:
-  annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/port: "8080"
-    prometheus.io/path: "/metrics"
+  name: myapp-pod-monitor
+  namespace: monitoring  # Обычно создается в том же namespace, где работает Prometheus
 spec:
-  containers:
-  - name: app
-    image: myapp:v1
-    ports:
-    - containerPort: 8080
-      name: metrics
+  selector:
+    matchLabels:
+      app: myapp  # Ищем поды с этой меткой
+  podMetricsEndpoints:
+  - port: metrics  # Указываем ИМЯ порта из манифеста пода (не номер!)
+    path: /metrics # Путь к метрикам
+    interval: 30s  # Интервал сбора
+    honorLabels: true # Важно для избежания конфликтов меток
+    # Дополнительные возможности:
+    # scheme: https        # Для TLS
+    # bearerTokenSecret:   # Для аутентификации
+    # relabelings: []      # Для продвинутой обработки меток
 ```
 
-**Лучшие практики:**
+### 33. Структурированное логирование
 
-* Экспонируйте метрики на выделенном порту
-* Используйте стандартные соглашения именования метрик (counter, gauge, histogram)
-* Включайте специфичные для приложения метки
-* Мониторьте как метрики приложения, так и инфраструктуры
-### 33. Реализуйте структурированное логирование
+Структурные логи проще искать и коррелировать (особенно в распределённых системах). Конечно, JSON - не единственный формат. Современные сборщики логов (например, Vector, Fluent Bit) также эффективно работают с форматами вроде logfmt. Главное - **не plain text**.
 
-**Почему важно:** Структурные логи проще искать и коррелировать (особенно в распределённых системах).
+**Если не делать:** Будет "простыня текста", которую невозможно нормально парсить/агрегировать; MTTR вырастет.
 
-**Если не делать:** Будет «простыня текста», которую невозможно нормально парсить/агрегировать; MTTR вырастет.
-
-Используйте JSON логирование для лучшего парсинга и запросов:
+Используйте JSON логирование для лучшего парсинга и структурирования логов:
 
 ```yaml
 spec:
@@ -212,9 +222,9 @@ spec:
 ```
 ### 34. Включите распределённую трассировку
 
-**Почему важно:** Трейсинг показывает путь запроса через сервисы — без него сложно ловить латентность и ошибки.
+Трейсинг показывает путь запроса через сервисы - без него сложно ловить латентность и ошибки. Но надо понимать что трассировка всего и вся не имеет никакого смысла, поэтому должна включаться по запросу. Например, через внешний вызов специального метода в приложении. Также можно использовать `OTEL_TRACES_SAMPLER_ARG` параметр
 
-**Если не делать:** Симптомы видны, причина — нет: будете долго искать «кто тормозит» и «где падает».
+**Если не делать:** Симптомы видны, причина - нет: будете долго искать "кто тормозит" и "где падает".
 
 Добавьте OpenTelemetry для трассировки запросов:
 
@@ -245,7 +255,7 @@ spec:
 
 ```yaml
 spec:
-  terminationGracePeriodSeconds: 60  # По умолчанию 30
+  terminationGracePeriodSeconds: 90  # Увеличено для запаса на graceful shutdown
   containers:
   - name: app
     lifecycle:
@@ -255,68 +265,190 @@ spec:
           - /bin/sh
           - -c
           - |
-            # Подождать пока балансировщик удалит pod из ротации
-            sleep 5
-            # Gracefully завершить приложение
-            kill -SIGTERM 1
-            # Подождать дренажа соединений
-            wait
+            # 1. Сигнализируем приложению начать graceful shutdown
+            # Например, через HTTP-эндпоинт или пользовательский сигнал
+            curl -sf -X POST http://localhost:8080/prestop || true
+            
+            # 2. Короткая пауза, чтобы сигнал был обработан
+            # Вместо фиксированного сна можно проверить состояние
+            sleep 2
+    # КРИТИЧЕСКИ ВАЖНО: Настроенные Readiness Probe!
+    # Они заставят K8s немедленно исключить pod из Service
+    readinessProbe:
+      httpGet:
+        path: /health/ready
+        port: 8080
+      initialDelaySeconds: 5
+      periodSeconds: 2  # Частая проверка для быстрого исключения
+      failureThreshold: 1  # Одного провала достаточно
 ```
 
-**Почему это важно:**
+1. **Начало eviction:** Kubernetes решает завершить pod.
 
-1. Kubernetes отправляет SIGTERM контейнерам
-2. preStop hook выполняется первым (блокирующий)
-3. После завершения hook'а отправляется SIGTERM
-4. После grace period отправляется SIGKILL
+2. **Срабатывает preStop-хук:** Ваш скрипт отправляет сигнал приложению начать подготовку к завершению (например, перестать принимать новые соединения).
+
+3. **Readiness Probe сразу проваливается:** Приложение, получив сигнал, начинает отвечать 503 на запросы к эндпоинту готовности (/health/ready). Kubelet видит это и мгновенно удаляет pod из Endpoints Service.
+
+4. **Kubernetes отправляет SIGTERM:** После выполнения preStop-хука K8s отправляет SIGTERM процессу в контейнере. Ваше приложение должно быть готово его обработать.
+
+5. **Grace period:** У приложения есть оставшееся время до terminationGracePeriodSeconds (90с), чтобы завершить текущие запросы и корректно выключиться.
+
+6. **SIGKILL (если необходимо):** Если по истечении grace period процесс ещё жив, K8s отправляет SIGKILL.
+
 ### 36. Правильно обрабатывайте SIGTERM в приложении
 
-**Почему важно:** SIGTERM — стандартный сигнал остановки в k8s. Его обработка — обязанность приложения.
+SIGTERM - стандартный сигнал остановки в k8s. Его обработка - обязанность приложения.
 
 **Если не делать:** Kubelet даст SIGKILL по таймауту; данные/запросы потеряются, а состояние будет неконсистентным.
 
 **Пример для Go приложения:**
 
 ```go
-// Обработка graceful shutdown
-sigChan := make(chan os.Signal, 1)
-signal.Notify(sigChan, syscall.SIGTERM)
+package main
 
-go func() {
-    <-sigChan
-    log.Println("Получен SIGTERM, выключение gracefully...")
-    
-    // Прекратить принимать новые запросы
-    server.SetKeepAlivesEnabled(false)
-    
-    // Дать существующим запросам время завершиться
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel()
-    server.Shutdown(ctx)
-}()
+import (
+    "context"
+    "log"
+    "net/http"
+    "os"
+    "os/signal"
+    "sync"
+    "syscall"
+    "time"
+    "database/sql" // Предположим, что используется БД
+    "github.com/redis/go-redis/v9" // И Redis
+)
+
+func main() {
+    // Инициализация компонентов
+    db := initDatabase()
+    redisClient := initRedis()
+    cache := initLocalCache()
+
+    // Основной HTTP-сервер
+    server := &http.Server{
+        Addr: ":8080",
+        Handler: setupRoutes(db, redisClient, cache),
+    }
+
+    // Канал для graceful shutdown
+    stopChan := make(chan os.Signal, 1)
+    signal.Notify(stopChan, syscall.SIGTERM, syscall.SIGINT)
+
+    // Запуск сервера в горутине
+    go func() {
+        log.Println("Запуск HTTP-сервера на :8080")
+        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Fatalf("Ошибка сервера: %v", err)
+        }
+    }()
+
+    // Ожидание сигнала остановки
+    <-stopChan
+    log.Println("Получен сигнал остановки. Начинаем graceful shutdown...")
+
+    // Настройка общего таймаута для всего процесса shutdown
+    shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 25*time.Second)
+    defer shutdownCancel()
+
+    var wg sync.WaitGroup
+    errors := make(chan error, 3)
+
+    // 1. Остановка приёма новых HTTP-запросов
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        log.Println("Останавливаем HTTP-сервер...")
+        if err := server.Shutdown(shutdownCtx); err != nil {
+            errors <- err
+        }
+    }()
+
+    // 2. Graceful shutdown базы данных
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        log.Println("Закрываем соединения с БД...")
+        // Пример: закрытие пула соединений
+        if err := db.Close(); err != nil {
+            errors <- err
+        }
+    }()
+
+    // 3. Graceful shutdown Redis
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        log.Println("Закрываем клиент Redis...")
+        if err := redisClient.Close(); err != nil {
+            errors <- err
+        }
+    }()
+
+    // 4. Очистка кеша/сохранение состояния
+    wg.Add(1)
+    go func() {
+        defer wg.Done()
+        log.Println("Сбрасываем кеш на диск...")
+        cache.Flush()
+    }()
+
+    // Ждём завершения всех операций shutdown
+    wg.Wait()
+    close(errors)
+
+    // Проверяем, были ли ошибки
+    for err := range errors {
+        if err != nil {
+            log.Printf("Ошибка при graceful shutdown: %v", err)
+        }
+    }
+
+    log.Println("Graceful shutdown завершён успешно")
+}
 ```
+
 ### 37. Реализуйте дренаж соединений
 
-**Почему важно:** Дренаж соединений — ключ к обновлениям без боли и ошибок у клиентов.
+Современная лучшая практика - использовать readinessProbe как единственный механизм дренажа трафика, а preStop - только для инициирования процесса внутри приложения.
+
+Принцип прост: когда приложение получает SIGTERM, оно должно само изменить своё состояние готовности (например, начать возвращать 503 на запросы к /ready), и K8s автоматически исключит его из Service.
 
 **Если не делать:** Во время rollout пользователи увидят 5xx/timeout, даже если ‘всё обновилось успешно’.
 
-Для сервисов за балансировщиками нагрузки:
+Вот как это выглядит на практике:
 
 ```yaml
+# deployment.yaml
 spec:
-  containers:
-  - name: app
-    readinessProbe:
-      httpGet:
-        path: /ready
-        port: 8080
-      periodSeconds: 5
-    lifecycle:
-      preStop:
-        httpGet:
-          path: /shutdown
-          port: 8080
+  terminationGracePeriodSeconds: 90 # Даем достаточно времени на дренаж
+  template:
+    spec:
+      containers:
+      - name: app
+        # Ключевой элемент: readinessProbe с коротким интервалом
+        readinessProbe:
+          httpGet:
+            path: /ready       # Эндпоинт, который начинает возвращать 503 при получении SIGTERM
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 2     # Частая проверка для быстрого исключения из балансировки
+          failureThreshold: 1  # Достаточно одного провала
+          successThreshold: 1
+        # preStop используется ТОЛЬКО для триггера, а не для дренажа
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                # Просто отправляем SIGUSR1 или делаем легкий HTTP-вызов,
+                # чтобы приложение УЗНАЛО о начале shutdown.
+                # Это НЕ должен быть эндпоинт, который меняет readiness.
+                curl -s -X POST http://localhost:8080/internal-prestop || true
+                # Краткая пауза, чтобы сигнал дошел
+                sleep 1
 ```
 
 **Shutdown endpoint должен:**
@@ -332,9 +464,9 @@ spec:
 
 ### 38. Используйте дайджесты образов для продакшена
 
-**Почему важно:** Digest гарантирует неизменяемость образа — это воспроизводимость и безопасность.
+Digest гарантирует неизменяемость образа - это воспроизводимость и безопасность.
 
-**Если не делать:** Тег может поменяться под тем же именем: получите «не ту версию» в проде и долгое расследование.
+**Если не делать:** Тег может поменяться под тем же именем: получите "не ту версию" в проде и долгое расследование.
 
 **Плохо:**
 
@@ -349,11 +481,12 @@ image: nginx@sha256:4c0fdaa8b6341bfdeca5f18f7837462c80cff90527ee35ef185571e1c327
 ```
 
 **Почему:** Теги изменяемы, дайджесты неизменяемы и гарантируют точную версию образа.
+
 ### 39. Правильно настраивайте imagePullPolicy
 
-**Почему важно:** imagePullPolicy влияет на предсказуемость обновлений и нагрузку на registry.
+imagePullPolicy влияет на предсказуемость обновлений и нагрузку на registry.
 
-**Если не делать:** С `Always` можно случайно перегрузить registry/получить rate limit, с `IfNotPresent` — не обновиться.
+**Если не делать:** С `Always` можно случайно перегрузить registry/получить rate limit, с `IfNotPresent` - не обновиться.
 
 ```yaml
 spec:
@@ -363,43 +496,9 @@ spec:
     imagePullPolicy: IfNotPresent  # или Always
 ```
 
-**Руководство:**
+### 40. Сканируйте образы на уязвимости
 
-| Тег образа | Рекомендуемая политика | Причина |
-|-----------|------------------------|---------|
-| `:latest` | Always | Тег часто меняется |
-| `:v1.0.0` | IfNotPresent | Неизменяемый тег |
-| `@sha256:...` | IfNotPresent | Неизменяемый дайджест |
-| Development | Always | Быстрые итерации |
-### 40. Используйте аутентификацию в приватных реестрах
-
-**Почему важно:** Приватные registry требуют корректной auth-настройки, иначе деплой падает на ровном месте.
-
-**Если не делать:** ImagePullBackOff в самый неподходящий момент (релиз/скейл), плюс риск утечки кредов при плохой настройке.
-
-```yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: registry-credentials
-type: kubernetes.io/dockerconfigjson
-data:
-  .dockerconfigjson: <base64-encoded-docker-config>
----
-apiVersion: apps/v1
-kind: Deployment
-spec:
-  template:
-    spec:
-      imagePullSecrets:
-      - name: registry-credentials
-      containers:
-      - name: app
-        image: private-registry.io/myapp:v1
-```
-### 41. Сканируйте образы на уязвимости
-
-**Почему важно:** Сканирование образов — раннее обнаружение уязвимостей до продакшена.
+Сканирование образов = раннее обнаружение уязвимостей до продакшена.
 
 **Если не делать:** Уязвимость попадёт в прод, а фикс станет срочным и болезненным; иногда это заканчивается компрометацией.
 
@@ -412,3 +511,15 @@ trivy image myregistry/app:v1.0.0
 # Блокировать развёртывание при обнаружении критических уязвимостей
 trivy image --severity HIGH,CRITICAL --exit-code 1 myregistry/app:v1.0.0
 ```
+
+## Итог
+
+Настройка этих практик превращает хаотичный кластер в предсказуемую систему. Вы получаете не просто работающие поды, а систему, которая сама сообщает о проблемах и корректно завершает работу. Это фундамент, на котором строятся все остальные улучшения: от GitOps до сложного автомасштабирования.
+
+## В следующих частях
+
+**Часть 4: Масштабирование и хранилище** — HPA/VPA/KEDA для автомасштабирования, PersistentVolumes и StorageClasses, размещение по нодам/зонам (affinity/taints/spread), контейнерные паттерны (init/sidecar/ephemeral).
+
+**Часть 5: GitOps и платформа** — ArgoCD/FluxCD для управления через Git, service mesh (когда он нужен и как правильно), ingress контроллеры и TLS, RBAC, kubectl плагины и техники отладки.
+
+**Часть 6: Финальные темы** — оптимизация стоимости, управление переменными окружения, lifecycle hooks, policy-as-code (OPA/Kyverno), backup/DR с Velero, продвинутые probes, troubleshooting типовых проблем и антипаттерны.
