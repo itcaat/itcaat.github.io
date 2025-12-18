@@ -136,22 +136,16 @@ kind: Namespace
 metadata:
   name: production
   labels:
-    # 1. Аудит для restricted (логируем всё, что не соответствует)
+    # 1. В аудит-логи API-сервера попадут ВСЕ поды, которые не соответствуют самому высокому стандарту restricted. Это даёт полную картину.
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: latest
-    # 2. Предупреждения для baseline (видим базовые ошибки в kubectl)
+    # 2. Разработчики сразу увидят предупреждение в kubectl, если их под нарушает даже базовые требования.
     pod-security.kubernetes.io/warn: baseline
     pod-security.kubernetes.io/warn-version: latest
-    # 3. Пока не блокируем, или блокируем только privileged
+    # 3. Фактически не блокирует ничего, кроме совсем уж экзотических случаев. Это позволяет начать сбор данных, не ломая рабочие процессы. По мере готовности можно повысить уровень enforce до baseline, а затем и до restricted.
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/enforce-version: latest
 ```
-
-**Аудит (restricted):** В аудит-логи API-сервера попадут ВСЕ поды, которые не соответствуют самому высокому стандарту restricted. Это даёт полную картину.
-
-**Предупреждения (baseline):** Разработчики сразу увидят предупреждение в kubectl, если их под нарушает даже базовые требования.
-
-**Блокировка (privileged):** Фактически не блокирует ничего, кроме совсем уж экзотических случаев. Это позволяет начать сбор данных, не ломая рабочие процессы. По мере готовности можно повысить уровень enforce до baseline, а затем и до restricted.
 
 Для более сложных политик можно использовать: *Kyverno* или *OPA Gatekeeper*.
 
