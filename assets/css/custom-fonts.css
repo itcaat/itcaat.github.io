@@ -88,3 +88,77 @@ a:hover {
   color: inherit !important;
 }
 
+/* Фикс отображения блоков кода на мобильных устройствах (особенно iOS Safari) */
+pre {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+pre code {
+  white-space: pre !important;
+  word-wrap: normal !important;
+  word-break: normal !important;
+  display: inline-block !important;
+  min-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.highlight {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.highlight pre {
+  overflow-x: visible !important;
+  margin: 0 !important;
+  width: auto !important;
+}
+
+.highlight pre code {
+  display: inline-block !important;
+  min-width: 100% !important;
+}
+
+/* Специфичные фиксы для iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  /* Это сработает только в iOS Safari */
+  pre {
+    -webkit-text-size-adjust: 100% !important;
+  }
+  
+  pre code {
+    -webkit-text-size-adjust: 100% !important;
+    display: inline-block !important;
+    min-width: 100% !important;
+  }
+  
+  .highlight pre code {
+    width: max-content !important;
+  }
+}
+
+/* Для мобильных - убедимся что контент не обрезается */
+@media (max-width: 768px) {
+  .content {
+    overflow-x: hidden !important;
+  }
+  
+  pre,
+  .highlight {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 4px !important;
+  }
+  
+  pre code {
+    font-size: 0.85em !important;
+    padding-right: 1em !important;
+  }
+}
+
