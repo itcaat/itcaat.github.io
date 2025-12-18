@@ -451,12 +451,55 @@ spec:
                 sleep 1
 ```
 
-**Shutdown endpoint должен:**
+Современный подход через readinessProbe и атомарный флаг в приложении — это стандарт де-факто, который обеспечивает предсказуемый и безошибочный дренаж соединений.
 
-* Возвращать 503 Service Unavailable
-* Провалить readiness probe
-* Подождать завершения существующих соединений
-* Затем корректно завершиться
+Логика приложения становится чище и надёжнее:
+
+```go
+// Глобальный флаг, отражающий состояние shutdown
+var isShuttingDown atomic.Bool
+
+func main() {
+    // ... инициализация сервера ...
+
+    // Обработчик для readiness probe
+    http.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+        if isShuttingDown.Load() {
+            w.WriteHeader(http.StatusServiceUnavailable) // 503
+            return
+        }
+        // Проверка зависимостей (БД, кэш и т.д.)
+        if !checkDependencies() {
+            w.WriteHeader(http.StatusServiceUnavailable)
+            return
+        }
+        w.WriteHeader(http.StatusOK)
+    })
+
+    // Внутренний эндпоинт для preStop (опционально)
+    http.HandleFunc("/internal-prestop", func(w http.ResponseWriter, r *http.Request) {
+        log.Println("Начинаем процесс graceful shutdown...")
+        isShuttingDown.Store(true) // ГЛАВНОЕ: меняем состояние
+        w.WriteHeader(http.StatusOK)
+    })
+
+    // Обработка SIGTERM для graceful shutdown
+    go func() {
+        sigChan := make(chan os.Signal, 1)
+        signal.Notify(sigChan, syscall.SIGTERM)
+        <-sigChan
+        log.Println("Получен SIGTERM")
+        isShuttingDown.Store(true) // Также меняем состояние при прямом SIGTERM
+        
+        // Дальше стандартный graceful shutdown сервера
+        ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+        defer cancel()
+        server.Shutdown(ctx)
+    }()
+
+    // ... запуск сервера ...
+}
+```
 
 <a id="images"></a>
 
