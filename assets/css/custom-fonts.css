@@ -72,3 +72,19 @@ nav a {
   border-bottom: 1.5px solid #28a745 !important;
 }
 
+/* Убираем зелёный фон и смену цвета при наведении на ссылки */
+a:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.tags a:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.site-description a:hover {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
