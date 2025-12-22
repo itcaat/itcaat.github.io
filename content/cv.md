@@ -27,6 +27,6 @@ aliases = ["about","contact"]
 
 ## 📧 Контакты
 
-- Почта: worldisfreedom@gmail.com
-- Telegram: https://t.me/itcaat
-- Telegram-канал: https://t.me/devopsbrain
+- Моя почта: worldisfreedom@gmail.com
+- Мой telegram: https://t.me/itcaat
+- Мой закрытый Telegram-канал: https://t.me/+dRIaTpvVnyRlYzAy
