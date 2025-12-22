@@ -29,4 +29,4 @@ aliases = ["about","contact"]
 
 - Моя почта: worldisfreedom@gmail.com
 - Мой telegram: https://t.me/itcaat
-- Мой закрытый Telegram-канал: https://t.me/+dRIaTpvVnyRlYzAy
+- Мой закрытый Telegram-канал: https://t.me/devopsbrain

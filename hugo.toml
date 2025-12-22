@@ -35,7 +35,7 @@ url = "https://x.com/itcaat"
 [[params.social]]
 name = "Telegram"
 icon = "telegram"
-url = "https://t.me/+dRIaTpvVnyRlYzAy"
+url = "https://t.me/devopsbrain"
 
 [[menu.main]]
 name = "Блог"
