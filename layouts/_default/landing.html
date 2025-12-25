@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	{{ partial "header.html" . }}
+	<body>
+		<div class="landing-page">
+			<div class="landing-container">
+				<main class="landing-content">
+					<h1 class="landing-title">{{ .Title }}</h1>
+					
+					<div class="landing-body">
+						{{ .Content }}
+					</div>
+				</main>
+			</div>
+		</div>
+		
+		<style>
+			.landing-page {
+				min-height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 2rem 1rem;
+				background: var(--background);
+			}
+			
+			.landing-container {
+				max-width: 800px;
+				width: 100%;
+				margin: 0 auto;
+			}
+			
+			.landing-content {
+				text-align: center;
+			}
+			
+			.landing-title {
+				font-size: 2.5rem;
+				line-height: 1.2;
+				margin-bottom: 3rem;
+				font-weight: 700;
+				color: var(--color);
+			}
+			
+			.landing-body h2 {
+				font-size: 2.2rem;
+				line-height: 1.3;
+				margin-bottom: 2rem;
+				font-weight: 700;
+				color: var(--color);
+			}
+			
+			.landing-body h3 {
+				font-size: 1.5rem;
+				line-height: 1.4;
+				margin: 3rem 0 1.5rem;
+				font-weight: 600;
+				text-align: left;
+				color: var(--color);
+			}
+			
+			.landing-body p {
+				font-size: 1.2rem;
+				line-height: 1.6;
+				margin-bottom: 2rem;
+				color: var(--color);
+			}
+			
+			.landing-body ul {
+				text-align: left;
+				margin: 1.5rem auto;
+				max-width: 600px;
+				list-style: none;
+				padding: 0;
+			}
+			
+			.landing-body li {
+				font-size: 1.1rem;
+				line-height: 1.6;
+				margin-bottom: 0.8rem;
+				padding-left: 1.5rem;
+				position: relative;
+				color: var(--color);
+			}
+			
+			.landing-body li:before {
+				content: "–";
+				position: absolute;
+				left: 0;
+			}
+			
+			.landing-body a {
+				display: inline-block;
+				padding: 1rem 3rem;
+				background: #4A90E2;
+				color: white !important;
+				text-decoration: none;
+				border-radius: 50px;
+				font-size: 1.2rem;
+				font-weight: 600;
+				margin: 2rem 0;
+				transition: all 0.3s ease;
+				box-shadow: 0 4px 6px rgba(74, 144, 226, 0.3);
+			}
+			
+			.landing-body a:hover {
+				background: #357ABD;
+				transform: translateY(-2px);
+				box-shadow: 0 6px 12px rgba(74, 144, 226, 0.4);
+			}
+			
+			.landing-body strong {
+				font-weight: 700;
+				color: var(--color);
+			}
+			
+			@media (max-width: 768px) {
+				.landing-title {
+					font-size: 1.8rem;
+				}
+				
+				.landing-body h2 {
+					font-size: 1.6rem;
+				}
+				
+				.landing-body h3 {
+					font-size: 1.3rem;
+				}
+				
+				.landing-body p {
+					font-size: 1rem;
+				}
+				
+				.landing-body li {
+					font-size: 1rem;
+				}
+				
+				.landing-body a {
+					padding: 0.8rem 2rem;
+					font-size: 1rem;
+				}
+			}
+		</style>
+	</body>
+</html>
+
