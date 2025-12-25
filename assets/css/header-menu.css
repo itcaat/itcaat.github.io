@@ -1,0 +1,17 @@
+/* Header Menu Spacing */
+header nav a {
+    margin-left: 1rem;
+}
+
+/* Первый элемент не нужен левый отступ */
+header nav a:first-of-type {
+    margin-left: 0;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+    header nav a {
+        margin-left: 1rem;
+    }
+}
+
