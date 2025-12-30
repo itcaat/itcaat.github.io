@@ -36,12 +36,13 @@ curl -s https://gist.githubusercontent.com/itcaat/45edeaf15f2d508bee766daa9a9740
 3. **Дисковое пространство** - занятое место, inodes, SMART статус
 4. **Тест скорости дисков** - скорость записи/чтения (100MB тест)
 5. **Сетевые интерфейсы** - статус, ошибки, активные соединения
-6. **Тест сети** - ping до шлюза (10 пакетов), скорость интернета, проверка дополнительного хоста
+6. **Тест сети** - ping до шлюза, ya.ru и 8.8.8.8 (по 10 пакетов каждый), скорость интернета
 7. **Процессы** - топ по CPU и памяти, zombie процессы
 8. **Системные логи** - критические ошибки, OOM события, kernel warnings
 9. **Системные службы** - проверка упавших служб
 10. **Безопасность** - неудачные входы, активные SSH сессии
-11. **Docker** (опционально) - статус контейнеров и их ресурсы
+11. **Docker** - статус контейнеров и их ресурсы
+12. **Telegram уведомления** - автоматическая отправка при обнаружении проблем
 
 ## Полный код скрипта
 
@@ -56,14 +57,6 @@ curl -s https://gist.githubusercontent.com/itcaat/45edeaf15f2d508bee766daa9a9740
 # Version: 1.0
 #############################################
 
-# Colors for output
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-BOLD='\033[1m'
-
 # Status symbols
 CHECK_OK="✓"
 CHECK_WARN="⚠"
@@ -77,9 +70,9 @@ PROBLEM_SECTIONS=()  # Array to track sections with problems
 # Function for section headers
 print_section() {
     echo ""
-    echo -e "${BOLD}${BLUE}═══════════════════════════════════════════════════════${NC}"
-    echo -e "${BOLD}${BLUE}  $1${NC}"
-    echo -e "${BOLD}${BLUE}═══════════════════════════════════════════════════════${NC}"
+    echo "═══════════════════════════════════════════════════════"
+    echo "  $1"
+    echo "═══════════════════════════════════════════════════════"
     echo ""
 }
 
@@ -91,10 +84,10 @@ print_status() {
     
     case $status in
         "ok")
-            echo -e "${GREEN}${CHECK_OK}${NC} $message"
+            echo "${CHECK_OK} $message"
             ;;
         "warn")
-            echo -e "${YELLOW}${CHECK_WARN}${NC} $message"
+            echo "${CHECK_WARN} $message"
             ((WARNINGS++))
             # Add section to problem list if provided and not already there
             if [ ! -z "$section" ]; then
@@ -104,7 +97,7 @@ print_status() {
             fi
             ;;
         "crit")
-            echo -e "${RED}${CHECK_CRIT}${NC} $message"
+            echo "${CHECK_CRIT} $message"
             ((CRITICALS++))
             # Add section to problem list if provided and not already there
             if [ ! -z "$section" ]; then
@@ -121,17 +114,49 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Ping function (10 packets)
+do_ping() {
+    local host=$1
+    local description=$2
+    local section=$3
+    
+    echo "  Testing $description ($host):"
+    echo -n "    Ping (10 packets): "
+    
+    PING_RESULT=$(ping -c 10 -q "$host" 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        PACKET_LOSS=$(echo "$PING_RESULT" | grep "packet loss" | awk '{print $6}')
+        AVG_TIME=$(echo "$PING_RESULT" | grep "rtt" | awk -F'/' '{print $5}')
+        
+        echo "Loss: $PACKET_LOSS, Avg: ${AVG_TIME}ms"
+        
+        # Check packet loss
+        LOSS_PERCENT=$(echo "$PACKET_LOSS" | sed 's/%//')
+        if [ "$LOSS_PERCENT" -gt 20 ]; then
+            print_status "crit" "High packet loss to $description!" "$section"
+        elif [ "$LOSS_PERCENT" -gt 5 ]; then
+            print_status "warn" "Packet loss detected to $description" "$section"
+        else
+            print_status "ok" "$description is reachable"
+        fi
+    else
+        echo "Failed"
+        print_status "crit" "Cannot reach $description!" "$section"
+    fi
+    echo ""
+}
+
 #############################################
 # 1. SYSTEM INFORMATION
 #############################################
 check_system_info() {
     print_section "SYSTEM INFORMATION"
     
-    echo -e "${BOLD}Hostname:${NC} $(hostname)"
-    echo -e "${BOLD}OS:${NC} $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || uname -s)"
-    echo -e "${BOLD}Kernel:${NC} $(uname -r)"
-    echo -e "${BOLD}Architecture:${NC} $(uname -m)"
-    echo -e "${BOLD}Uptime:${NC} $(uptime -p 2>/dev/null || uptime | awk -F'up ' '{print $2}' | awk -F',' '{print $1}')"
+    echo "Hostname: $(hostname)"
+    echo "OS: $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d'"' -f2 || uname -s)"
+    echo "Kernel: $(uname -r)"
+    echo "Architecture: $(uname -m)"
+    echo "Uptime: $(uptime -p 2>/dev/null || uptime | awk -F'up ' '{print $2}' | awk -F',' '{print $1}')"
     
     # External IP address (using public services)
     if command_exists curl; then
@@ -142,20 +167,20 @@ check_system_info() {
         if [ -z "$EXTERNAL_IP" ]; then
             EXTERNAL_IP="N/A"
         fi
-        echo -e "${BOLD}External IP:${NC} $EXTERNAL_IP"
+        echo "External IP: $EXTERNAL_IP"
     fi
     
     # CPU information
     if [ -f /proc/cpuinfo ]; then
         CPU_MODEL=$(grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2 | xargs)
         CPU_CORES=$(grep -c "processor" /proc/cpuinfo)
-        echo -e "${BOLD}CPU:${NC} $CPU_MODEL ($CPU_CORES cores)"
+        echo "CPU: $CPU_MODEL ($CPU_CORES cores)"
     fi
     
     # RAM information
     if command_exists free; then
         TOTAL_RAM=$(free -h | awk '/^Mem:/ {print $2}')
-        echo -e "${BOLD}Total RAM:${NC} $TOTAL_RAM"
+        echo "Total RAM: $TOTAL_RAM"
     fi
 }
 
@@ -171,7 +196,7 @@ check_resources() {
         CPU_CORES=$(grep -c "processor" /proc/cpuinfo)
         LOAD_1MIN=$(cat /proc/loadavg | awk '{print $1}')
         
-        echo -e "${BOLD}Load Average:${NC} $LOAD_AVG (${CPU_CORES} cores)"
+        echo "Load Average: $LOAD_AVG (${CPU_CORES} cores)"
         
         # Check load
         if (( $(echo "$LOAD_1MIN > $CPU_CORES * 2" | bc -l) )); then
@@ -187,7 +212,7 @@ check_resources() {
     
     # Memory
     if command_exists free; then
-        echo -e "${BOLD}Memory:${NC}"
+        echo "Memory:"
         free -h
         
         # Check memory usage
@@ -247,7 +272,7 @@ check_temperature() {
 check_disk_space() {
     print_section "DISK SPACE"
     
-    echo -e "${BOLD}Partition usage:${NC}"
+    echo "Partition usage:"
     df -h -x tmpfs -x devtmpfs | grep -v "^Filesystem"
     
     echo ""
@@ -266,7 +291,7 @@ check_disk_space() {
     
     # Check inodes
     echo ""
-    echo -e "${BOLD}Inodes usage (top-5 partitions):${NC}"
+    echo "Inodes usage (top-5 partitions):"
     df -i -x tmpfs -x devtmpfs | grep -v "^Filesystem" | awk '{print $5 " " $6}' | while read line; do
         USAGE_PERCENT=$(echo $line | awk '{print $1}')
         MOUNT=$(echo $line | awk '{print $2}')
@@ -286,7 +311,7 @@ check_disk_space() {
     # SMART status (if available)
     if command_exists smartctl; then
         echo ""
-        echo -e "${BOLD}SMART disk status:${NC}"
+        echo "SMART disk status:"
         for disk in $(lsblk -d -o name,type 2>/dev/null | awk '$2=="disk" {print $1}'); do
             SMART_STATUS=$(smartctl -H /dev/$disk 2>/dev/null | grep "SMART overall-health")
             
@@ -320,7 +345,7 @@ check_disk_speed() {
     ROOT_MOUNT=$(df / | tail -1 | awk '{print $6}')
     TEST_FILE="/tmp/disk_speed_test_$$"
     
-    echo -e "${BOLD}Write/Read speed test for $ROOT_MOUNT:${NC}"
+    echo "Write/Read speed test for $ROOT_MOUNT:"
     echo "  (using 100MB temporary file)"
     echo ""
     
@@ -354,7 +379,7 @@ check_disk_speed() {
     echo ""
     print_status "ok" "Disk speed test completed"
     echo ""
-    echo -e "${BOLD}Note:${NC} This is a basic test. For detailed analysis use fio or hdparm."
+    echo "Note: This is a basic test. For detailed analysis use fio or hdparm."
 }
 
 #############################################
@@ -363,7 +388,7 @@ check_disk_speed() {
 check_network() {
     print_section "NETWORK DIAGNOSTICS"
     
-    echo -e "${BOLD}Network interfaces:${NC}"
+    echo "Network interfaces:"
     if command_exists ip; then
         ip -br addr show | grep -v "^lo"
     else
@@ -374,7 +399,7 @@ check_network() {
     
     # Check interface errors
     if [ -f /proc/net/dev ]; then
-        echo -e "${BOLD}Interface errors:${NC}"
+        echo "Interface errors:"
         awk 'NR>2 {print $1, $4, $12}' /proc/net/dev | while read iface rx_errors tx_errors; do
             iface=$(echo $iface | sed 's/:$//')
             if [ "$iface" != "lo" ]; then
@@ -389,7 +414,7 @@ check_network() {
     echo ""
     
     # Active connections (external)
-    echo -e "${BOLD}Top-10 external connections (by IP):${NC}"
+    echo "Top-10 external connections (by IP):"
     
     # Get local IP addresses for filtering
     LOCAL_IPS=$(ip addr show 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '^127\.')
@@ -421,78 +446,31 @@ check_network() {
         echo -e "$FILTERED_CONNECTIONS" | grep -v "^$" | sort | uniq -c | sort -rn | head -10
     fi
     
-    # Ping to gateway
+    # Network connectivity tests
     echo ""
-    echo -e "${BOLD}Gateway connectivity test:${NC}"
+    echo "Network connectivity tests:"
+    echo ""
+    
+    # 1. Ping to gateway
     GATEWAY=$(ip route | grep default | awk '{print $3}' | head -1)
-    
     if [ ! -z "$GATEWAY" ]; then
-        echo "  Gateway: $GATEWAY"
-        echo -n "  Ping test (10 packets): "
-        
-        PING_RESULT=$(ping -c 10 -q "$GATEWAY" 2>/dev/null)
-        if [ $? -eq 0 ]; then
-            PACKET_LOSS=$(echo "$PING_RESULT" | grep "packet loss" | awk '{print $6}')
-            AVG_TIME=$(echo "$PING_RESULT" | grep "rtt" | awk -F'/' '{print $5}')
-            
-            echo "Loss: $PACKET_LOSS, Avg: ${AVG_TIME}ms"
-            
-            # Check packet loss
-            LOSS_PERCENT=$(echo "$PACKET_LOSS" | sed 's/%//')
-            if [ "$LOSS_PERCENT" -gt 20 ]; then
-                print_status "crit" "High packet loss to gateway!" "Network"
-            elif [ "$LOSS_PERCENT" -gt 5 ]; then
-                print_status "warn" "Packet loss detected to gateway" "Network"
-            else
-                print_status "ok" "Gateway is reachable"
-            fi
-        else
-            print_status "crit" "Cannot reach gateway!" "Network"
-        fi
+        do_ping "$GATEWAY" "Gateway" "Network"
     else
+        echo "  Gateway: Not found"
         print_status "warn" "No default gateway found" "Network"
-    fi
-    
-    # Ping to custom host (from environment variable)
-    if [ ! -z "$DIAGNOSTIC_PING_HOST" ]; then
         echo ""
-        echo -e "${BOLD}Custom host connectivity test:${NC}"
-        echo "  Host: $DIAGNOSTIC_PING_HOST"
-        echo -n "  Ping test (10 packets): "
-        
-        PING_RESULT=$(ping -c 10 -q "$DIAGNOSTIC_PING_HOST" 2>/dev/null)
-        if [ $? -eq 0 ]; then
-            PACKET_LOSS=$(echo "$PING_RESULT" | grep "packet loss" | awk '{print $6}')
-            AVG_TIME=$(echo "$PING_RESULT" | grep "rtt" | awk -F'/' '{print $5}')
-            
-            echo "Loss: $PACKET_LOSS, Avg: ${AVG_TIME}ms"
-            
-            # Check packet loss
-            LOSS_PERCENT=$(echo "$PACKET_LOSS" | sed 's/%//')
-            if [ "$LOSS_PERCENT" -gt 20 ]; then
-                print_status "crit" "High packet loss to $DIAGNOSTIC_PING_HOST!" "Network"
-            elif [ "$LOSS_PERCENT" -gt 5 ]; then
-                print_status "warn" "Packet loss detected to $DIAGNOSTIC_PING_HOST" "Network"
-            else
-                print_status "ok" "Host $DIAGNOSTIC_PING_HOST is reachable"
-            fi
-        else
-            print_status "crit" "Cannot reach $DIAGNOSTIC_PING_HOST!" "Network"
-        fi
     fi
     
-    # Check internet connection
-    echo ""
-    if ping -c 1 8.8.8.8 >/dev/null 2>&1; then
-        print_status "ok" "Internet connection working"
-    else
-        print_status "crit" "No internet connection!" "Network"
-    fi
+    # 2. Ping to ya.ru
+    do_ping "ya.ru" "ya.ru (DNS + connectivity)" "Network"
+    
+    # 3. Ping to 8.8.8.8
+    do_ping "8.8.8.8" "Google DNS" "Network"
     
     # Internet speed test (optional)
     echo ""
     if command_exists curl; then
-        echo -e "${BOLD}Internet speed test:${NC}"
+        echo "Internet speed test:"
         echo -n "  Download (testing 100MB file): "
         
         # Test download speed using curl
@@ -525,11 +503,11 @@ check_network() {
 check_processes() {
     print_section "PROCESSES"
     
-    echo -e "${BOLD}Top-10 processes by CPU:${NC}"
+    echo "Top-10 processes by CPU:"
     ps aux --sort=-%cpu | head -11 | tail -10
     
     echo ""
-    echo -e "${BOLD}Top-10 processes by memory:${NC}"
+    echo "Top-10 processes by memory:"
     ps aux --sort=-%mem | head -11 | tail -10
     
     # Zombie processes
@@ -545,7 +523,7 @@ check_processes() {
     # Total processes
     echo ""
     TOTAL_PROCESSES=$(ps aux | wc -l)
-    echo -e "${BOLD}Total processes:${NC} $TOTAL_PROCESSES"
+    echo "Total processes: $TOTAL_PROCESSES"
 }
 
 #############################################
@@ -556,33 +534,33 @@ check_logs() {
     
     # Detect logging system
     if command_exists journalctl; then
-        echo -e "${BOLD}Critical errors in last 24 hours (journalctl):${NC}"
+        echo "Critical errors in last 24 hours (journalctl):"
         journalctl -p err -S "24 hours ago" --no-pager | tail -20
         
         echo ""
-        echo -e "${BOLD}OOM (Out of Memory) events:${NC}"
+        echo "OOM (Out of Memory) events:"
         journalctl -k | grep -i "out of memory\|oom" | tail -10
         
     elif [ -f /var/log/syslog ]; then
-        echo -e "${BOLD}Critical errors (syslog):${NC}"
+        echo "Critical errors (syslog):"
         grep -i "error\|critical\|fail" /var/log/syslog | tail -20
         
         echo ""
-        echo -e "${BOLD}OOM events:${NC}"
+        echo "OOM events:"
         grep -i "out of memory\|oom" /var/log/syslog | tail -10
         
     elif [ -f /var/log/messages ]; then
-        echo -e "${BOLD}Critical errors (messages):${NC}"
+        echo "Critical errors (messages):"
         grep -i "error\|critical\|fail" /var/log/messages | tail -20
         
         echo ""
-        echo -e "${BOLD}OOM events:${NC}"
+        echo "OOM events:"
         grep -i "out of memory\|oom" /var/log/messages | tail -10
     fi
     
     # Kernel warnings
     echo ""
-    echo -e "${BOLD}Kernel warnings (dmesg):${NC}"
+    echo "Kernel warnings (dmesg):"
     if command_exists dmesg; then
         # Use -T to show real time (if supported)
         if dmesg -T >/dev/null 2>&1; then
@@ -595,7 +573,7 @@ check_logs() {
     
     # Failed SSH attempts
     echo ""
-    echo -e "${BOLD}Failed SSH attempts (last 10):${NC}"
+    echo "Failed SSH attempts (last 10):"
     if [ -f /var/log/auth.log ]; then
         grep "Failed password" /var/log/auth.log | tail -10
     elif [ -f /var/log/secure ]; then
@@ -610,7 +588,7 @@ check_services() {
     print_section "SYSTEM SERVICES"
     
     if command_exists systemctl; then
-        echo -e "${BOLD}Failed services:${NC}"
+        echo "Failed services:"
         FAILED_SERVICES=$(systemctl list-units --state=failed --no-pager --no-legend)
         
         if [ -z "$FAILED_SERVICES" ]; then
@@ -631,7 +609,7 @@ check_security() {
     print_section "SECURITY"
     
     # Last successful logins
-    echo -e "${BOLD}Last successful logins:${NC}"
+    echo "Last successful logins:"
     if command_exists last; then
         last -n 10 | grep -v "^$\|^wtmp"
     fi
@@ -639,7 +617,7 @@ check_security() {
     echo ""
     
     # Active SSH sessions
-    echo -e "${BOLD}Active SSH sessions:${NC}"
+    echo "Active SSH sessions:"
     who | grep -v "^$"
     
     # Check number of active SSH sessions
@@ -651,11 +629,11 @@ check_security() {
     echo ""
     
     # Sudo activity in last 24 hours
-    echo -e "${BOLD}Sudo activity in last 24 hours:${NC}"
+    echo "Sudo activity in last 24 hours:"
     if [ -f /var/log/auth.log ]; then
-        grep "sudo.*COMMAND" /var/log/auth.log | grep "$(date +%b' '%d)" | tail -10
+        grep "sudo.*COMMAND" /var/log/auth.log | tail -10
     elif [ -f /var/log/secure ]; then
-        grep "sudo.*COMMAND" /var/log/secure | grep "$(date +%b' '%d)" | tail -10
+        grep "sudo.*COMMAND" /var/log/secure | tail -10
     fi
 }
 
@@ -666,7 +644,7 @@ check_docker() {
     if command_exists docker; then
         print_section "DOCKER"
         
-        echo -e "${BOLD}Container status:${NC}"
+        echo "Container status:"
         docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
         
         echo ""
@@ -680,7 +658,7 @@ check_docker() {
         fi
         
         echo ""
-        echo -e "${BOLD}Resource usage by containers:${NC}"
+        echo "Resource usage by containers:"
         docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
     fi
 }
@@ -691,20 +669,20 @@ check_docker() {
 generate_summary() {
     print_section "DIAGNOSTIC SUMMARY"
     
-    echo -e "${BOLD}Check date and time:${NC} $(date '+%Y-%m-%d %H:%M:%S')"
-    echo -e "${BOLD}Hostname:${NC} $(hostname)"
+    echo "Check date and time: $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "Hostname: $(hostname)"
     echo ""
     
     # Hardware summary
-    echo -e "${BOLD}${BLUE}Hardware Summary:${NC}"
+    echo "Hardware Summary:"
     echo ""
     
     # CPU info
     if [ -f /proc/cpuinfo ]; then
         CPU_MODEL=$(grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2 | xargs)
         CPU_CORES=$(grep -c "processor" /proc/cpuinfo)
-        echo -e "  ${BOLD}CPU:${NC} $CPU_MODEL"
-        echo -e "  ${BOLD}Cores:${NC} $CPU_CORES"
+        echo "  CPU: $CPU_MODEL"
+        echo "  Cores: $CPU_CORES"
     fi
     
     # RAM info
@@ -712,52 +690,52 @@ generate_summary() {
         TOTAL_RAM=$(free -h | awk '/^Mem:/ {print $2}')
         USED_RAM=$(free -h | awk '/^Mem:/ {print $3}')
         MEM_PERCENT=$(free | grep Mem | awk '{print int($3/$2 * 100)}')
-        echo -e "  ${BOLD}RAM:${NC} $USED_RAM / $TOTAL_RAM (${MEM_PERCENT}%)"
+        echo "  RAM: $USED_RAM / $TOTAL_RAM (${MEM_PERCENT}%)"
     fi
     
     # Disk info
     if command_exists df; then
         TOTAL_DISK=$(df -h --total 2>/dev/null | grep total | awk '{print $2}' || df -h / | tail -1 | awk '{print $2}')
         USED_DISK=$(df -h --total 2>/dev/null | grep total | awk '{print $3}' || df -h / | tail -1 | awk '{print $3}')
-        echo -e "  ${BOLD}Disk:${NC} $USED_DISK / $TOTAL_DISK"
+        echo "  Disk: $USED_DISK / $TOTAL_DISK"
     fi
     
     # Load Average
     if [ -f /proc/loadavg ]; then
         LOAD_AVG=$(cat /proc/loadavg | awk '{print $1, $2, $3}')
-        echo -e "  ${BOLD}Load Average:${NC} $LOAD_AVG"
+        echo "  Load Average: $LOAD_AVG"
     fi
     
     # Uptime
     UPTIME=$(uptime -p 2>/dev/null || uptime | awk -F'up ' '{print $2}' | awk -F',' '{print $1}')
-    echo -e "  ${BOLD}Uptime:${NC} $UPTIME"
+    echo "  Uptime: $UPTIME"
     
     echo ""
-    echo -e "${BOLD}${BLUE}Diagnostic Results:${NC}"
+    echo "Diagnostic Results:"
     echo ""
     
     if [ "$CRITICALS" -eq 0 ] && [ "$WARNINGS" -eq 0 ]; then
-        echo -e "${GREEN}${BOLD}${CHECK_OK} System is in excellent condition!${NC}"
+        echo "${CHECK_OK} System is in excellent condition!"
     elif [ "$CRITICALS" -eq 0 ]; then
-        echo -e "${YELLOW}${BOLD}${CHECK_WARN} Warnings detected: $WARNINGS${NC}"
-        echo -e "Recommended to pay attention to the indicated issues."
+        echo "${CHECK_WARN} Warnings detected: $WARNINGS"
+        echo "Recommended to pay attention to the indicated issues."
     else
-        echo -e "${RED}${BOLD}${CHECK_CRIT} ATTENTION! Critical problems detected!${NC}"
-        echo -e "${RED}Critical: $CRITICALS${NC}"
-        echo -e "${YELLOW}Warnings: $WARNINGS${NC}"
+        echo "${CHECK_CRIT} ATTENTION! Critical problems detected!"
+        echo "Critical: $CRITICALS"
+        echo "Warnings: $WARNINGS"
     fi
     
     # Show problem sections if any
     if [ ${#PROBLEM_SECTIONS[@]} -gt 0 ]; then
         echo ""
-        echo -e "${BOLD}Sections with problems:${NC}"
+        echo "Sections with problems:"
         for section in "${PROBLEM_SECTIONS[@]}"; do
-            echo -e "  ${RED}•${NC} $section"
+            echo "  • $section"
         done
     fi
     
     echo ""
-    echo -e "${BOLD}Recommendations:${NC}"
+    echo "Recommendations:"
     
     if [ "$CRITICALS" -gt 0 ] || [ "$WARNINGS" -gt 0 ]; then
         echo "  • Review the report above and fix the detected problems"
@@ -768,10 +746,6 @@ generate_summary() {
         echo "  • Continue regular system monitoring"
         echo "  • Recommended to run this script once a day"
     fi
-    
-    echo ""
-    echo -e "${BOLD}To save report to file run:${NC}"
-    echo "  $0 | tee system_diagnostic_\$(date +%Y%m%d_%H%M%S).txt"
     
     # Return error code for monitoring systems integration
     if [ "$CRITICALS" -gt 0 ]; then
@@ -784,43 +758,163 @@ generate_summary() {
 }
 
 #############################################
+# TELEGRAM NOTIFICATION
+#############################################
+send_telegram_notification() {
+    local exit_code=$1
+    local report_file=$2
+    
+    # Check if Telegram credentials are set
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        return 0
+    fi
+    
+    # Only send if there are problems
+    if [ "$exit_code" -eq 0 ]; then
+        return 0
+    fi
+    
+    # Check if curl is available
+    if ! command_exists curl; then
+        echo "Warning: curl not found, cannot send Telegram notification"
+        return 1
+    fi
+    
+    # Prepare message
+    local hostname=$(hostname)
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local status_emoji=""
+    local status_text=""
+    
+    if [ "$exit_code" -eq 2 ]; then
+        status_emoji="🚨"
+        status_text="CRITICAL PROBLEMS"
+    else
+        status_emoji="⚠️"
+        status_text="WARNINGS"
+    fi
+    
+    # Build message
+    local message="${status_emoji} ${status_text} on ${hostname}!
+
+Time: ${timestamp}
+Critical: ${CRITICALS}
+Warnings: ${WARNINGS}"
+    
+    # Add problem sections if any
+    if [ ${#PROBLEM_SECTIONS[@]} -gt 0 ]; then
+        message="${message}
+
+Sections with problems:"
+        for section in "${PROBLEM_SECTIONS[@]}"; do
+            message="${message}
+  • ${section}"
+        done
+    fi
+    
+    message="${message}
+
+Please check the detailed report."
+    
+    # Send message
+    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+        -d chat_id="${TELEGRAM_CHAT_ID}" \
+        -d text="${message}" >/dev/null 2>&1
+    
+    # Send report file if it exists
+    if [ -f "$report_file" ]; then
+        curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+            -F chat_id="${TELEGRAM_CHAT_ID}" \
+            -F document=@"${report_file}" \
+            -F caption="Full diagnostic report" >/dev/null 2>&1
+    fi
+}
+
+#############################################
 # MAIN FUNCTION
 #############################################
 main() {
-    clear
-    echo -e "${BOLD}${BLUE}"
-    echo "╔════════════════════════════════════════════════════════════════╗"
-    echo "║                                                                ║"
-    echo "║        LINUX SYSTEM DIAGNOSTICS                               ║"
-    echo "║        System Diagnostic Script v1.0                          ║"
-    echo "║                                                                ║"
-    echo "╚════════════════════════════════════════════════════════════════╝"
-    echo -e "${NC}"
-    echo ""
+    # Temporary file for report
+    TEMP_REPORT="/tmp/system_diagnostic_$(date +%Y%m%d_%H%M%S).txt"
+    TEMP_COUNTERS="/tmp/system_diagnostic_counters_$$.tmp"
     
-    # Check root privileges (some checks require sudo)
-    if [ "$EUID" -ne 0 ]; then 
-        echo -e "${YELLOW}${CHECK_WARN} Script running without root privileges. Some checks may be unavailable.${NC}"
-        echo -e "${YELLOW}For full diagnostics run: sudo $0${NC}"
+    # Run diagnostics and capture output
+    {
+        clear
+        echo "╔════════════════════════════════════════════════════════════════╗"
+        echo "║                                                                ║"
+        echo "║        LINUX SYSTEM DIAGNOSTICS                               ║"
+        echo "║        System Diagnostic Script v1.0                          ║"
+        echo "║                                                                ║"
+        echo "╚════════════════════════════════════════════════════════════════╝"
         echo ""
+        
+        # Check root privileges (some checks require sudo)
+        if [ "$EUID" -ne 0 ]; then 
+            echo "${CHECK_WARN} Script running without root privileges. Some checks may be unavailable."
+            echo "For full diagnostics run: sudo $0"
+            echo ""
+        fi
+        
+        # Run all checks
+        check_system_info
+        check_resources
+        check_temperature
+        check_disk_space
+        check_disk_speed
+        check_network
+        check_processes
+        check_logs
+        check_services
+        check_security
+        check_docker
+        
+        # Final summary
+        generate_summary
+        
+        # Save counters and problem sections to file (to survive tee subshell)
+        echo "$CRITICALS" > "$TEMP_COUNTERS"
+        echo "$WARNINGS" >> "$TEMP_COUNTERS"
+        # Save problem sections (one per line)
+        for section in "${PROBLEM_SECTIONS[@]}"; do
+            echo "$section" >> "$TEMP_COUNTERS"
+        done
+    } | tee "$TEMP_REPORT"
+    
+    # Read counters from file
+    if [ -f "$TEMP_COUNTERS" ]; then
+        CRITICALS=$(sed -n '1p' "$TEMP_COUNTERS")
+        WARNINGS=$(sed -n '2p' "$TEMP_COUNTERS")
+        # Read problem sections (starting from line 3)
+        PROBLEM_SECTIONS=()
+        while IFS= read -r section; do
+            PROBLEM_SECTIONS+=("$section")
+        done < <(tail -n +3 "$TEMP_COUNTERS")
+        rm -f "$TEMP_COUNTERS"
     fi
     
-    # Run all checks
-    check_system_info
-    check_resources
-    check_temperature
-    check_disk_space
-    check_disk_speed
-    check_network
-    check_processes
-    check_logs
-    check_services
-    check_security
-    check_docker
+    # Determine exit code from counters
+    if [ "$CRITICALS" -gt 0 ]; then
+        EXIT_CODE=2
+    elif [ "$WARNINGS" -gt 0 ]; then
+        EXIT_CODE=1
+    else
+        EXIT_CODE=0
+    fi
     
-    # Final summary
-    generate_summary
-    EXIT_CODE=$?
+    # Send Telegram notification if configured and there are problems
+    send_telegram_notification "$EXIT_CODE" "$TEMP_REPORT"
+    
+    # Clean up temp files
+    if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+        rm -f "$TEMP_REPORT"
+    else
+        # Keep report for a short time in case of retry
+        (sleep 60 && rm -f "$TEMP_REPORT") &
+    fi
+    
+    # Clean up counter file if exists
+    rm -f "$TEMP_COUNTERS"
     
     # Exit with appropriate code
     exit $EXIT_CODE
@@ -848,7 +942,7 @@ curl -s https://gist.githubusercontent.com/itcaat/45edeaf15f2d508bee766daa9a9740
 curl -s https://gist.githubusercontent.com/itcaat/45edeaf15f2d508bee766daa9a97400c/raw/linux-diag-script.sh | sudo bash | tee diagnostic_$(date +%Y%m%d_%H%M%S).txt
 
 # При локальном запуске
-sudo ./system_diagnostic.sh | tee diagnostic_$(date +%Y%m%d_%H%M%S).txt
+sudo ./linux-diag.sh | tee diagnostic_$(date +%Y%m%d_%H%M%S).txt
 ```
 
 ### Что считается проблемой
@@ -883,31 +977,18 @@ sudo ./system_diagnostic.sh | tee diagnostic_$(date +%Y%m%d_%H%M%S).txt
 
 Скрипт поддерживает настройку через переменные окружения:
 
-**DIAGNOSTIC_PING_HOST** - дополнительный хост для проверки пинга
+**TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID** - автоматическая отправка уведомлений в Telegram
 
 ```bash
-# Проверить доступность конкретного сервера
-export DIAGNOSTIC_PING_HOST="192.168.1.100"
-./system_diagnostic.sh
+# Уведомления при обнаружении проблем
+export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+export TELEGRAM_CHAT_ID="987654321"
+sudo -E ./linux-diag.sh
 
 # Или в одну строку
-DIAGNOSTIC_PING_HOST="db.example.com" ./system_diagnostic.sh
-
-# Проверить доступность нескольких критичных серверов
-DIAGNOSTIC_PING_HOST="10.0.0.50" sudo ./system_diagnostic.sh
-```
-
-**Примеры использования:**
-
-```bash
-# Проверка доступности базы данных
-DIAGNOSTIC_PING_HOST="postgres.internal.local" ./system_diagnostic.sh
-
-# Проверка доступности API сервера
-DIAGNOSTIC_PING_HOST="api.company.com" ./system_diagnostic.sh
-
-# С сохранением отчета
-DIAGNOSTIC_PING_HOST="192.168.10.5" ./system_diagnostic.sh | tee report.txt
+TELEGRAM_BOT_TOKEN="your_token" \
+TELEGRAM_CHAT_ID="your_chat_id" \
+sudo -E ./linux-diag.sh
 ```
 
 
@@ -948,150 +1029,81 @@ main() {
 | **1** | Предупреждение | Обнаружены предупреждения, требуется внимание |
 | **2** | Критично | Обнаружены критические проблемы, требуется немедленное вмешательство |
 
-## Автоматизация: Cron + Telegram
+## Уведомления в Telegram
 
-### Шаг 1: Создание Telegram бота
+Скрипт автоматически отправляет уведомления в Telegram при обнаружении проблем, если настроены переменные окружения.
+
+### Настройка Telegram бота
+
+**Шаг 1: Создайте бота**
 
 1. Найдите [@BotFather](https://t.me/BotFather) в Telegram
 2. Отправьте команду `/newbot`
 3. Следуйте инструкциям и получите токен бота (например: `123456789:ABCdefGHIjklMNOpqrsTUVwxyz`)
-4. Создайте группу или используйте личный чат
-5. Добавьте бота в группу (или начните диалог)
-6. Получите Chat ID:
-   - Отправьте сообщение боту
-   - Откройте: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
-   - Найдите `"chat":{"id":` - это ваш Chat ID
 
-### Шаг 2: Создание обертки для отправки уведомлений
+**Шаг 2: Получите Chat ID**
 
-Создайте файл `/usr/local/bin/system_diagnostic_notify.sh`:
+1. Отправьте сообщение вашему боту
+2. Откройте в браузере: `https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates`
+3. Найдите `"chat":{"id":` - это ваш Chat ID (например: `987654321`)
 
-```bash
-#!/bin/bash
+### Использование с Telegram
 
-# Конфигурация Telegram
-TELEGRAM_BOT_TOKEN="YOUR_BOT_TOKEN_HERE"
-TELEGRAM_CHAT_ID="YOUR_CHAT_ID_HERE"
-
-# Путь к скрипту диагностики
-DIAGNOSTIC_SCRIPT="/usr/local/bin/system_diagnostic.sh"
-
-# Временный файл для вывода
-OUTPUT_FILE="/tmp/system_diagnostic_$(date +%Y%m%d_%H%M%S).txt"
-
-# Запускаем диагностику и сохраняем вывод
-$DIAGNOSTIC_SCRIPT > "$OUTPUT_FILE" 2>&1
-EXIT_CODE=$?
-
-# Функция отправки в Telegram
-send_telegram() {
-    local message="$1"
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-        -d chat_id="${TELEGRAM_CHAT_ID}" \
-        -d text="${message}" \
-        -d parse_mode="HTML" \
-        > /dev/null
-}
-
-# Отправка файла в Telegram
-send_telegram_file() {
-    local file="$1"
-    local caption="$2"
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
-        -F chat_id="${TELEGRAM_CHAT_ID}" \
-        -F document=@"${file}" \
-        -F caption="${caption}" \
-        > /dev/null
-}
-
-# Обработка результата
-HOSTNAME=$(hostname)
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-
-case $EXIT_CODE in
-    0)
-        # Все хорошо - отправляем только если хотите регулярные отчеты
-        # Раскомментируйте если нужны уведомления о нормальном состоянии
-        # send_telegram "✅ <b>$HOSTNAME</b> - Система в порядке
-        # Время: $DATE"
-        ;;
-    1)
-        # Предупреждения
-        send_telegram "⚠️ <b>ПРЕДУПРЕЖДЕНИЯ на $HOSTNAME</b>
-
-Время: $DATE
-Статус: Обнаружены предупреждения
-
-Просмотрите детали в приложенном файле."
-        send_telegram_file "$OUTPUT_FILE" "Отчет диагностики $HOSTNAME"
-        ;;
-    2)
-        # Критические проблемы
-        send_telegram "🚨 <b>КРИТИЧЕСКИЕ ПРОБЛЕМЫ на $HOSTNAME!</b>
-
-Время: $DATE
-Статус: Требуется немедленное вмешательство!
-
-⚠️ Просмотрите детали СРОЧНО!"
-        send_telegram_file "$OUTPUT_FILE" "⚠️ Критический отчет $HOSTNAME"
-        ;;
-esac
-
-# Удаляем временный файл (закомментируйте если хотите сохранять)
-rm -f "$OUTPUT_FILE"
-
-# Возвращаем оригинальный код выхода
-exit $EXIT_CODE
-```
-
-Сделайте скрипт исполняемым:
+**Вариант 1: Переменные окружения**
 
 ```bash
-chmod +x /usr/local/bin/system_diagnostic_notify.sh
+# Установите переменные и запустите
+export TELEGRAM_BOT_TOKEN="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+export TELEGRAM_CHAT_ID="987654321"
+
+sudo -E ./linux-diag.sh
 ```
 
-### Шаг 3: Настройка cron
+**Вариант 2: В одну строку**
 
-**Вариант 1: Проверка каждые 6 часов**
+```bash
+TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_CHAT_ID="your_chat_id" sudo -E ./linux-diag.sh
+```
+
+**Вариант 3: Через cron**
+
+Создайте файл `/etc/cron.d/system-diagnostic`:
+
+```cron
+# Проверка каждые 6 часов
+0 */6 * * * root TELEGRAM_BOT_TOKEN="your_token" TELEGRAM_CHAT_ID="your_chat_id" /usr/local/bin/linux-diag.sh >/dev/null 2>&1
+```
+
+Или добавьте переменные в cron:
 
 ```bash
 sudo crontab -e
 ```
 
-Добавьте:
-
 ```cron
-# Диагностика системы каждые 6 часов
-0 */6 * * * /usr/local/bin/system_diagnostic_notify.sh
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+TELEGRAM_CHAT_ID=987654321
 
-# Или в конкретное время (например в 6:00, 12:00, 18:00, 00:00)
-0 6,12,18,0 * * * /usr/local/bin/system_diagnostic_notify.sh
+# Проверка каждые 6 часов
+0 */6 * * * /usr/local/bin/linux-diag.sh
+
+# Или в конкретное время (6:00, 12:00, 18:00, 00:00)
+0 6,12,18,0 * * * /usr/local/bin/linux-diag.sh
 ```
 
-**Вариант 2: С логированием**
+### Что отправляется
 
-```cron
-# С сохранением логов
-0 */6 * * * /usr/local/bin/system_diagnostic_notify.sh >> /var/log/system_diagnostic.log 2>&1
-```
+**При обнаружении проблем скрипт отправит:**
 
-### Шаг 4: Проверка работы
+1. **Сообщение** с кратким описанием:
+   - Уровень проблемы (⚠️ Warnings или 🚨 Critical)
+   - Имя хоста
+   - Количество критических проблем и предупреждений
+   - Список проблемных секций
 
-Протестируйте отправку вручную:
+2. **Файл** с полным отчетом диагностики
 
-```bash
-# Запустите скрипт
-sudo /usr/local/bin/system_diagnostic_notify.sh
-
-# Проверьте логи cron
-sudo tail -f /var/log/syslog | grep CRON
-# или для систем с systemd
-sudo journalctl -u cron -f
-```
-
-### Пример уведомления в Telegram
-
-При обнаружении проблем вы получите сообщение с указанием уровня критичности и файл с полным отчетом диагностики.
+**Если проблем нет** - уведомления не отправляются (экономия сообщений).
 
 ## Заключение
 
