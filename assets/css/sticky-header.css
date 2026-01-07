@@ -1,5 +1,6 @@
 /* Sticky Header */
 header {
+    position: -webkit-sticky; /* Для Safari/iOS */
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -8,6 +9,8 @@ header {
     margin: 0 !important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     transition: box-shadow 0.3s ease;
+    width: 100%; /* Важно для мобильных */
+    left: 0; /* Фикс для некоторых мобильных браузеров */
 }
 
 /* Добавляем padding к body чтобы контент не прятался под header */
@@ -32,6 +35,19 @@ body.light-theme header {
 @media (max-width: 768px) {
     header {
         padding: 0.5em 1ch;
+    }
+    
+    /* Убеждаемся что header занимает всю ширину экрана */
+    header .main,
+    header nav {
+        max-width: 100%;
+        overflow: visible;
+    }
+    
+    /* Фикс для iOS Safari - убираем возможность отрыва при скролле */
+    header {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
     }
 }
 

@@ -145,7 +145,9 @@ pre code {
 
 /* Для мобильных - убедимся что контент не обрезается */
 @media (max-width: 768px) {
-  .content {
+  /* Убираем overflow-x: hidden с .content, т.к. это блокирует sticky header */
+  /* Вместо этого применяем overflow локально где нужно */
+  body {
     overflow-x: hidden !important;
   }
   
@@ -154,11 +156,17 @@ pre code {
     margin-left: 0 !important;
     margin-right: 0 !important;
     border-radius: 4px !important;
+    overflow-x: auto !important;
   }
   
   pre code {
     font-size: 0.85em !important;
     padding-right: 1em !important;
+  }
+  
+  /* Блокируем горизонтальную прокрутку для основного контента */
+  main, article {
+    overflow-x: hidden;
   }
 }
 
