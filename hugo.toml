@@ -37,6 +37,11 @@ name = "Telegram"
 icon = "telegram"
 url = "https://t.me/devopsbrain"
 
+[[params.social]]
+name = "RSS"
+icon = "rss"
+url = "/index.xml"
+
 [[menu.main]]
 name = "Блог"
 url = "/"
