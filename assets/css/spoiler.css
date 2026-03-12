@@ -1,0 +1,25 @@
+/* Styles for spoiler/hidden blocks */
+details.spoiler {
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 1rem 0;
+  background: var(--c-bg-secondary);
+}
+
+details.spoiler summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+details.spoiler summary::marker {
+  content: "▶";
+  display: inline-block;
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+}
+
+details.spoiler[open] summary::marker {
+  transform: rotate(90deg);
+}
