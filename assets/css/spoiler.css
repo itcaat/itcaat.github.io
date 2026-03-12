@@ -11,15 +11,23 @@ details.spoiler summary {
   cursor: pointer;
   font-weight: 600;
   list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
 }
 
 details.spoiler summary::marker {
+  display: none;
+}
+
+details.spoiler summary::before {
   content: "▶";
   display: inline-block;
   transform: rotate(0deg);
   transition: transform 0.2s ease;
 }
 
-details.spoiler[open] summary::marker {
+details.spoiler[open] summary::before {
   transform: rotate(90deg);
 }
